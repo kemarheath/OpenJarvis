@@ -1,0 +1,23 @@
+[project]
+name = "openjarvis-evals"
+version = "0.1.0"
+description = "Evaluation framework for OpenJarvis"
+requires-python = ">=3.10"
+dependencies = [
+    "openjarvis>=1.0.0",
+    "click>=8",
+    "datasets>=2.14",
+    "huggingface-hub>=0.20",
+    "tqdm>=4.65",
+    "rich>=13",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "pytest-cov>=5"]
+
+[project.scripts]
+openjarvis-eval = "evals.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

@@ -1,0 +1,88 @@
+"""Jarvis Agent backend — agent-level inference with tool calling."""
+
+from __future__ import annotations
+
+import time
+from typing import Any, Dict, List, Optional
+
+from evals.core.backend import InferenceBackend
+
+
+class JarvisAgentBackend(InferenceBackend):
+    """Agent-level inference via SystemBuilder + JarvisSystem.ask().
+
+    Supports tool calling via the agent harness. Works for both local
+    and cloud models.
+    """
+
+    backend_id = "jarvis-agent"
+
+    def __init__(
+        self,
+        engine_key: Optional[str] = None,
+        agent_name: str = "orchestrator",
+        tools: Optional[List[str]] = None,
+    ) -> None:
+        from openjarvis.system import SystemBuilder
+
+        self._agent_name = agent_name
+        self._tools = tools or []
+
+        builder = SystemBuilder()
+        if engine_key:
+            builder.engine(engine_key)
+        builder.agent(agent_name)
+        if tools:
+            builder.tools(tools)
+        self._system = builder.telemetry(False).traces(False).build()
+
+    def generate(
+        self,
+        prompt: str,
+        *,
+        model: str,
+        system: str = "",
+        temperature: float = 0.0,
+        max_tokens: int = 2048,
+    ) -> str:
+        result = self.generate_full(
+            prompt, model=model, system=system,
+            temperature=temperature, max_tokens=max_tokens,
+        )
+        return result["content"]
+
+    def generate_full(
+        self,
+        prompt: str,
+        *,
+        model: str,
+        system: str = "",
+        temperature: float = 0.0,
+        max_tokens: int = 2048,
+    ) -> Dict[str, Any]:
+        t0 = time.monotonic()
+        result = self._system.ask(
+            prompt,
+            agent=self._agent_name,
+            tools=self._tools if self._tools else None,
+            temperature=temperature,
+            max_tokens=max_tokens,
+        )
+        elapsed = time.monotonic() - t0
+
+        usage = result.get("usage", {})
+        return {
+            "content": result.get("content", ""),
+            "usage": usage,
+            "model": result.get("model", model),
+            "latency_seconds": elapsed,
+            "cost_usd": result.get("cost_usd", 0.0),
+            "turns": result.get("turns", 1),
+            "tool_results": result.get("tool_results", []),
+        }
+
+    def close(self) -> None:
+        self._system.close()
+
+
+__all__ = ["JarvisAgentBackend"]
