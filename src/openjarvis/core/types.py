@@ -162,6 +162,7 @@ class TelemetryRecord:
     cpu_energy_joules: float = 0.0
     gpu_energy_joules: float = 0.0
     dram_energy_joules: float = 0.0
+    tokens_per_joule: float = 0.0
     metadata: Dict[str, Any] = field(default_factory=dict)
 
 
