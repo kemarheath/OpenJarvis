@@ -6,7 +6,7 @@ import pytest
 
 from openjarvis.operators.loader import load_operator
 
-_OPERATORS_DIR = Path(__file__).parent.parent.parent / "recipes" / "operators"
+_OPERATORS_DIR = Path(__file__).parent.parent.parent / "src" / "openjarvis" / "recipes" / "data" / "operators"
 
 
 class TestResearcherOperator:

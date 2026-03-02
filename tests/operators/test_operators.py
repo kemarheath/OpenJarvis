@@ -832,12 +832,12 @@ class TestLoadBundledOperators:
 
     @pytest.fixture
     def operators_dir(self):
-        # Find the project-level operators/ directory
+        # Find the package-level operators/data/ directory
         here = Path(__file__).resolve()
         project_root = here.parent.parent.parent
-        ops_dir = project_root / "operators"
+        ops_dir = project_root / "src" / "openjarvis" / "operators" / "data"
         if not ops_dir.is_dir():
-            pytest.skip("operators/ directory not found")
+            pytest.skip("operators/data/ directory not found")
         return ops_dir
 
     def test_researcher_loads(self, operators_dir):

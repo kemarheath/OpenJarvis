@@ -10,6 +10,11 @@ from rich.console import Console
 from rich.table import Table
 
 
+def _builtin_operators_dir() -> Path:
+    """Return the path to built-in operator manifests shipped with the package."""
+    return Path(__file__).resolve().parents[1] / "operators" / "data"
+
+
 @click.group()
 def operators() -> None:
     """Manage operators — persistent, scheduled autonomous agents."""
@@ -32,7 +37,7 @@ def list_operators() -> None:
 
         # Also check project-local operators/ directory
         project_dirs = [manifests_dir]
-        local_ops = Path("operators")
+        local_ops = _builtin_operators_dir()
         if local_ops.is_dir():
             project_dirs.append(local_ops)
 
@@ -244,7 +249,7 @@ def _find_manifest(operator_id: str):
     from openjarvis.core.config import DEFAULT_CONFIG_DIR
     from openjarvis.operators.loader import load_operator
 
-    dirs = [DEFAULT_CONFIG_DIR / "operators", Path("operators")]
+    dirs = [DEFAULT_CONFIG_DIR / "operators", _builtin_operators_dir()]
     for d in dirs:
         if not d.is_dir():
             continue
@@ -271,7 +276,7 @@ def _build_system_with_operators():
     # Discover from known directories
     from openjarvis.core.config import DEFAULT_CONFIG_DIR
 
-    for d in [DEFAULT_CONFIG_DIR / "operators", Path("operators")]:
+    for d in [DEFAULT_CONFIG_DIR / "operators", _builtin_operators_dir()]:
         if d.is_dir():
             manager.discover(d)
 
