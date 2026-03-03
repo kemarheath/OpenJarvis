@@ -1,4 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
+import { MicButton } from './MicButton';
+import { useSpeech } from '../../hooks/useSpeech';
 
 const COLLAPSE_CHAR_THRESHOLD = 500;
 const COLLAPSE_LINE_THRESHOLD = 6;
@@ -33,6 +35,23 @@ export function InputArea({ onSend, onStop, isStreaming }: InputAreaProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const fullMessage = attachment ? attachment + '\n' + typed : typed;
+
+  const { state: speechState, available: speechAvailable, startRecording, stopRecording, error: speechError } = useSpeech();
+
+  const handleMicClick = useCallback(async () => {
+    if (speechState === 'recording') {
+      try {
+        const text = await stopRecording();
+        if (text) {
+          setTyped((prev) => (prev ? prev + ' ' + text : text));
+        }
+      } catch {
+        // Error is captured in speechError
+      }
+    } else {
+      await startRecording();
+    }
+  }, [speechState, startRecording, stopRecording]);
 
   const handleSend = useCallback(() => {
     if (!fullMessage.trim() || isStreaming) return;
@@ -145,13 +164,21 @@ export function InputArea({ onSend, onStop, isStreaming }: InputAreaProps) {
             Stop
           </button>
         ) : (
-          <button
-            className="send-btn"
-            onClick={handleSend}
-            disabled={!fullMessage.trim()}
-          >
-            Send
-          </button>
+          <div style={{ display: 'flex', gap: '4px' }}>
+            {speechAvailable && (
+              <MicButton
+                state={speechState}
+                onClick={handleMicClick}
+              />
+            )}
+            <button
+              className="send-btn"
+              onClick={handleSend}
+              disabled={!fullMessage.trim()}
+            >
+              Send
+            </button>
+          </div>
         )}
       </div>
     </div>
