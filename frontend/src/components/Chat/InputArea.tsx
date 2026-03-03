@@ -85,6 +85,7 @@ export function InputArea() {
     let accumulatedContent = '';
     let usage: TokenUsage | undefined;
     const toolCalls: ToolCallInfo[] = [];
+    let lastFlush = 0;
 
     setStreamState({
       isStreaming: true,
@@ -145,12 +146,17 @@ export function InputArea() {
             if (data.usage) usage = data.usage;
             if (delta?.content) {
               accumulatedContent += delta.content;
-              setStreamState({ content: accumulatedContent });
-              updateLastAssistant(
-                convId,
-                accumulatedContent,
-                toolCalls.length > 0 ? [...toolCalls] : undefined,
-              );
+              setStreamState({ content: accumulatedContent, phase: '' });
+
+              const now = Date.now();
+              if (now - lastFlush >= 80) {
+                updateLastAssistant(
+                  convId,
+                  accumulatedContent,
+                  toolCalls.length > 0 ? [...toolCalls] : undefined,
+                );
+                lastFlush = now;
+              }
             }
             if (data.choices?.[0]?.finish_reason === 'stop') break;
           } catch {}

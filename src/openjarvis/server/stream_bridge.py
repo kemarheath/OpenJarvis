@@ -192,7 +192,7 @@ class AgentStreamBridge:
                 yield "data: [DONE]\n\n"
                 return
 
-            # Emit single content chunk with finish_reason + usage
+            # Emit tool results metadata if any
             tool_results_data = []
             for tr in agent_result.tool_results:
                 tool_results_data.append({
@@ -202,25 +202,54 @@ class AgentStreamBridge:
                     "latency_ms": tr.latency_seconds * 1000,
                 })
 
-            content_chunk = ChatCompletionChunk(
+            if tool_results_data:
+                yield self._format_named_event(
+                    "tool_results", {"results": tool_results_data},
+                )
+
+            # Stream content progressively (word-by-word) for a
+            # real-time feel, then send a final chunk with usage.
+            content = agent_result.content or ""
+            if content:
+                words = content.split(" ")
+                for i, word in enumerate(words):
+                    token = word if i == 0 else " " + word
+                    chunk = ChatCompletionChunk(
+                        id=self._chunk_id,
+                        model=self._model,
+                        choices=[StreamChoice(
+                            delta=DeltaMessage(content=token),
+                        )],
+                    )
+                    yield f"data: {chunk.model_dump_json()}\n\n"
+                    await asyncio.sleep(0.012)
+
+            # Final chunk: finish_reason + usage
+            prompt_tokens = agent_result.metadata.get("prompt_tokens", 0)
+            completion_tokens = agent_result.metadata.get(
+                "completion_tokens", 0,
+            )
+            total_tokens = agent_result.metadata.get("total_tokens", 0)
+            if total_tokens == 0 and content:
+                completion_tokens = max(len(content) // 4, 1)
+                prompt_tokens = completion_tokens  # rough estimate
+                total_tokens = prompt_tokens + completion_tokens
+
+            final_chunk = ChatCompletionChunk(
                 id=self._chunk_id,
                 model=self._model,
                 choices=[StreamChoice(
-                    delta=DeltaMessage(content=agent_result.content),
+                    delta=DeltaMessage(),
                     finish_reason="stop",
                 )],
             )
-            content_data = json.loads(content_chunk.model_dump_json())
-            if tool_results_data:
-                content_data["tool_results"] = tool_results_data
-            content_data["usage"] = UsageInfo(
-                prompt_tokens=agent_result.metadata.get("prompt_tokens", 0),
-                completion_tokens=agent_result.metadata.get(
-                    "completion_tokens", 0,
-                ),
-                total_tokens=agent_result.metadata.get("total_tokens", 0),
+            final_data = json.loads(final_chunk.model_dump_json())
+            final_data["usage"] = UsageInfo(
+                prompt_tokens=prompt_tokens,
+                completion_tokens=completion_tokens,
+                total_tokens=total_tokens,
             ).model_dump()
-            yield f"data: {json.dumps(content_data)}\n\n"
+            yield f"data: {json.dumps(final_data)}\n\n"
 
             yield "data: [DONE]\n\n"
 

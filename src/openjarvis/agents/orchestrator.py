@@ -211,6 +211,8 @@ class OrchestratorAgent(ToolUsingAgent):
 
         all_tool_results: list[ToolResult] = []
         turns = 0
+        total_prompt_tokens = 0
+        total_completion_tokens = 0
 
         for _turn in range(self._max_turns):
             turns += 1
@@ -221,6 +223,11 @@ class OrchestratorAgent(ToolUsingAgent):
                 gen_kwargs["tools"] = openai_tools
 
             result = self._generate(messages, **gen_kwargs)
+
+            # Accumulate token usage
+            usage = result.get("usage", {})
+            total_prompt_tokens += usage.get("prompt_tokens", 0)
+            total_completion_tokens += usage.get("completion_tokens", 0)
 
             content = result.get("content", "")
             raw_tool_calls = result.get("tool_calls", [])
@@ -234,6 +241,11 @@ class OrchestratorAgent(ToolUsingAgent):
                     content=content,
                     tool_results=all_tool_results,
                     turns=turns,
+                    metadata={
+                        "prompt_tokens": total_prompt_tokens,
+                        "completion_tokens": total_completion_tokens,
+                        "total_tokens": total_prompt_tokens + total_completion_tokens,
+                    },
                 )
 
             # Build ToolCall objects from raw dicts
@@ -288,7 +300,18 @@ class OrchestratorAgent(ToolUsingAgent):
 
         # Max turns exceeded
         final_content = self._strip_think_tags(content) if content else ""
-        return self._max_turns_result(all_tool_results, turns, content=final_content)
+        self._emit_turn_end(turns=turns, max_turns_exceeded=True)
+        return AgentResult(
+            content=final_content or "Maximum turns reached without a final answer.",
+            tool_results=all_tool_results,
+            turns=turns,
+            metadata={
+                "max_turns_exceeded": True,
+                "prompt_tokens": total_prompt_tokens,
+                "completion_tokens": total_completion_tokens,
+                "total_tokens": total_prompt_tokens + total_completion_tokens,
+            },
+        )
 
 
 __all__ = ["OrchestratorAgent"]
