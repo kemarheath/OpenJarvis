@@ -405,6 +405,50 @@ async fn run_jarvis_command(args: Vec<String>) -> Result<String, String> {
     }
 }
 
+/// Transcribe audio via the speech API endpoint.
+#[tauri::command]
+async fn transcribe_audio(
+    api_url: String,
+    audio_data: Vec<u8>,
+    filename: String,
+) -> Result<serde_json::Value, String> {
+    let url = format!("{}/v1/speech/transcribe", api_url);
+    let client = reqwest::Client::new();
+
+    let part = reqwest::multipart::Part::bytes(audio_data)
+        .file_name(filename)
+        .mime_str("audio/webm")
+        .map_err(|e| format!("Failed to create multipart: {}", e))?;
+
+    let form = reqwest::multipart::Form::new().part("file", part);
+
+    let resp = client
+        .post(&url)
+        .multipart(form)
+        .send()
+        .await
+        .map_err(|e| format!("Connection failed: {}", e))?;
+    let body: serde_json::Value = resp
+        .json()
+        .await
+        .map_err(|e| format!("Invalid response: {}", e))?;
+    Ok(body)
+}
+
+/// Check speech backend health.
+#[tauri::command]
+async fn speech_health(api_url: String) -> Result<serde_json::Value, String> {
+    let url = format!("{}/v1/speech/health", api_url);
+    let resp = reqwest::get(&url)
+        .await
+        .map_err(|e| format!("Connection failed: {}", e))?;
+    let body: serde_json::Value = resp
+        .json()
+        .await
+        .map_err(|e| format!("Invalid response: {}", e))?;
+    Ok(body)
+}
+
 // ---------------------------------------------------------------------------
 // App entry point
 // ---------------------------------------------------------------------------
@@ -497,6 +541,8 @@ pub fn run() {
             fetch_agents,
             fetch_models,
             run_jarvis_command,
+            transcribe_audio,
+            speech_health,
         ])
         .build(tauri::generate_context!())
         .expect("error while building OpenJarvis Desktop")

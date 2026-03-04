@@ -3,6 +3,8 @@ import { Send, Square, Paperclip } from 'lucide-react';
 import { useAppStore, generateId } from '../../lib/store';
 import { streamChat } from '../../lib/sse';
 import { fetchSavings } from '../../lib/api';
+import { MicButton } from './MicButton';
+import { useSpeech } from '../../hooks/useSpeech';
 import type { ChatMessage, ToolCallInfo, TokenUsage } from '../../types';
 
 export function InputArea() {
@@ -21,7 +23,23 @@ export function InputArea() {
   const setStreamState = useAppStore((s) => s.setStreamState);
   const resetStream = useAppStore((s) => s.resetStream);
 
-  // Auto-resize textarea
+  const { state: speechState, available: speechAvailable, startRecording, stopRecording } = useSpeech();
+
+  const handleMicClick = useCallback(async () => {
+    if (speechState === 'recording') {
+      try {
+        const text = await stopRecording();
+        if (text) {
+          setInput((prev) => (prev ? prev + ' ' + text : text));
+        }
+      } catch {
+        // Error is captured in useSpeech
+      }
+    } else {
+      await startRecording();
+    }
+  }, [speechState, startRecording, stopRecording]);
+
   useEffect(() => {
     const el = textareaRef.current;
     if (!el) return;
@@ -238,18 +256,27 @@ export function InputArea() {
             <Square size={16} />
           </button>
         ) : (
-          <button
-            onClick={sendMessage}
-            disabled={!input.trim()}
-            className="p-2 rounded-xl transition-colors shrink-0 cursor-pointer disabled:opacity-30 disabled:cursor-default"
-            style={{
-              background: input.trim() ? 'var(--color-accent)' : 'var(--color-bg-tertiary)',
-              color: input.trim() ? 'white' : 'var(--color-text-tertiary)',
-            }}
-            title="Send message"
-          >
-            <Send size={16} />
-          </button>
+          <div className="flex items-center gap-1">
+            {speechAvailable && (
+              <MicButton
+                state={speechState}
+                onClick={handleMicClick}
+                disabled={streamState.isStreaming}
+              />
+            )}
+            <button
+              onClick={sendMessage}
+              disabled={!input.trim()}
+              className="p-2 rounded-xl transition-colors shrink-0 cursor-pointer disabled:opacity-30 disabled:cursor-default"
+              style={{
+                background: input.trim() ? 'var(--color-accent)' : 'var(--color-bg-tertiary)',
+                color: input.trim() ? 'white' : 'var(--color-text-tertiary)',
+              }}
+              title="Send message"
+            >
+              <Send size={16} />
+            </button>
+          </div>
         )}
       </div>
       <div className="flex items-center justify-center mt-2 text-[11px]" style={{ color: 'var(--color-text-tertiary)' }}>

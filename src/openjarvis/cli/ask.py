@@ -4,13 +4,15 @@ from __future__ import annotations
 
 import json as json_mod
 import sys
+import time
 
 import click
 from rich.console import Console
+from rich.table import Table
 
 from openjarvis.cli.hints import hint_no_engine
 from openjarvis.core.config import load_config
-from openjarvis.core.events import EventBus
+from openjarvis.core.events import EventBus, EventType
 from openjarvis.core.types import Message, Role
 from openjarvis.engine import (
     EngineConnectionError,
@@ -147,6 +149,119 @@ def _run_agent(
     return agent.run(query_text, context=ctx)
 
 
+def _print_profile(
+    bus: EventBus,
+    wall_seconds: float,
+    engine_name: str,
+    model_name: str,
+    console: Console,
+) -> None:
+    """Print an inference telemetry profile table from EventBus history."""
+    # Collect all INFERENCE_END events (agents may fire multiple)
+    inf_events = [
+        e for e in bus.history if e.event_type == EventType.INFERENCE_END
+    ]
+    if not inf_events:
+        console.print("[dim]No inference telemetry recorded.[/dim]")
+        return
+
+    total_calls = len(inf_events)
+
+    # Aggregate across all inference calls
+    total_latency = sum(e.data.get("latency", 0.0) for e in inf_events)
+    total_tokens = sum(
+        e.data.get("usage", {}).get("completion_tokens", 0)
+        or e.data.get("completion_tokens", 0)
+        for e in inf_events
+    )
+    total_prompt = sum(
+        e.data.get("usage", {}).get("prompt_tokens", 0)
+        for e in inf_events
+    )
+    total_energy = sum(e.data.get("energy_joules", 0.0) for e in inf_events)
+    avg_power = 0.0
+    power_vals = [e.data.get("power_watts", 0.0) for e in inf_events
+                  if e.data.get("power_watts", 0.0) > 0]
+    if power_vals:
+        avg_power = sum(power_vals) / len(power_vals)
+
+    throughput = total_tokens / total_latency if total_latency > 0 else 0.0
+    energy_per_tok = total_energy / total_tokens if total_tokens > 0 else 0.0
+    tpw = throughput / avg_power if avg_power > 0 else 0.0
+    tok_per_j = total_tokens / total_energy if total_energy > 0 else 0.0
+
+    last = inf_events[-1].data
+    ttft = last.get("ttft", 0.0)
+    prefill_lat = last.get("prefill_latency_seconds", 0.0)
+    decode_lat = last.get("decode_latency_seconds", 0.0)
+    prefill_e = sum(e.data.get("prefill_energy_joules", 0.0) for e in inf_events)
+    decode_e = sum(e.data.get("decode_energy_joules", 0.0) for e in inf_events)
+    gpu_util = last.get("gpu_utilization_pct", 0.0)
+    gpu_mem = last.get("gpu_memory_used_gb", 0.0)
+    gpu_temp = last.get("gpu_temperature_c", 0.0)
+    mean_itl = last.get("mean_itl_ms", 0.0)
+    e_method = last.get("energy_method", "")
+    e_vendor = last.get("energy_vendor", "")
+
+    # Build the profile table
+    table = Table(
+        title=f"Inference Profile  ({engine_name} / {model_name})",
+        show_header=True,
+        header_style="bold bright_white",
+        border_style="bright_blue",
+        title_style="bold cyan",
+    )
+    table.add_column("Metric", style="cyan", no_wrap=True)
+    table.add_column("Value", justify="right", style="green")
+
+    def _row(label: str, val: str) -> None:
+        table.add_row(label, val)
+
+    _row("Wall time", f"{wall_seconds:.3f} s")
+    _row("Inference calls", str(total_calls))
+    _row("Total latency", f"{total_latency:.3f} s")
+    if ttft > 0:
+        _row("TTFT", f"{ttft * 1000:.1f} ms")
+    if prefill_lat > 0:
+        _row("Prefill latency", f"{prefill_lat * 1000:.1f} ms")
+    if decode_lat > 0:
+        _row("Decode latency", f"{decode_lat:.3f} s")
+    if mean_itl > 0:
+        _row("Mean ITL", f"{mean_itl:.2f} ms")
+    _row("Prompt tokens", str(total_prompt))
+    _row("Completion tokens", str(total_tokens))
+    _row("Throughput", f"{throughput:.1f} tok/s")
+
+    if total_energy > 0:
+        _row("", "")  # separator
+        _row("Energy", f"{total_energy:.4f} J")
+        if prefill_e > 0:
+            _row("  Prefill energy", f"{prefill_e:.4f} J")
+        if decode_e > 0:
+            _row("  Decode energy", f"{decode_e:.4f} J")
+        _row("Energy / output token", f"{energy_per_tok:.6f} J")
+        _row("Tokens / joule", f"{tok_per_j:.1f}")
+        _row("Throughput / watt (IPW)", f"{tpw:.2f} tok/s/W")
+        if avg_power > 0:
+            _row("Avg power draw", f"{avg_power:.1f} W")
+        if e_vendor:
+            _row("Energy vendor", e_vendor)
+        if e_method:
+            _row("Energy method", e_method)
+
+    if gpu_util > 0 or gpu_mem > 0 or gpu_temp > 0:
+        _row("", "")  # separator
+        if gpu_util > 0:
+            _row("GPU utilization", f"{gpu_util:.1f} %")
+        if gpu_mem > 0:
+            _row("GPU memory used", f"{gpu_mem:.2f} GB")
+        if gpu_temp > 0:
+            _row("GPU temperature", f"{gpu_temp:.0f} °C")
+
+    console.print()
+    console.print(table)
+
+
 @click.command()
 @click.argument("query", nargs=-1, required=True)
 @click.option("-m", "--model", "model_name", default=None, help="Model to use.")
@@ -173,6 +288,10 @@ def _run_agent(
     "--tools", "tool_names", default=None,
     help="Comma-separated tool names to enable (e.g. calculator,think).",
 )
+@click.option(
+    "--profile", "enable_profile", is_flag=True,
+    help="Print inference telemetry profile (latency, tokens, energy, IPW).",
+)
 def ask(
     query: tuple[str, ...],
     model_name: str | None,
@@ -184,10 +303,13 @@ def ask(
     no_context: bool,
     agent_name: str | None,
     tool_names: str | None,
+    enable_profile: bool,
 ) -> None:
     """Ask Jarvis a question."""
     console = Console(stderr=True)
     query_text = " ".join(query)
+
+    wall_start = time.monotonic() if enable_profile else None
 
     # Load config
     config = load_config()
@@ -228,7 +350,8 @@ def ask(
 
     # Wrap engine with InstrumentedEngine for telemetry (energy + GPU metrics)
     energy_monitor = None
-    if config.telemetry.gpu_metrics:
+    want_energy = config.telemetry.gpu_metrics or enable_profile
+    if want_energy:
         try:
             from openjarvis.telemetry.energy_monitor import create_energy_monitor
 
@@ -288,6 +411,12 @@ def ask(
         else:
             click.echo(result.content)
 
+        if enable_profile:
+            _print_profile(
+                bus, time.monotonic() - wall_start,
+                engine_name, model_name, console,
+            )
+
         if telem_store is not None:
             try:
                 telem_store.close()
@@ -340,6 +469,12 @@ def ask(
         click.echo(json_mod.dumps(result, indent=2))
     else:
         click.echo(result.get("content", ""))
+
+    if enable_profile:
+        _print_profile(
+            bus, time.monotonic() - wall_start,
+            engine_name, model_name, console,
+        )
 
     # Cleanup
     if energy_monitor is not None:
