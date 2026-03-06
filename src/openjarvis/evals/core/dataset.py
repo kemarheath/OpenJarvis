@@ -43,5 +43,15 @@ class DatasetProvider(ABC):
         """Return list of unsatisfied requirements, or empty list."""
         return []
 
+    def iter_episodes(self) -> Iterable[List[EvalRecord]]:
+        """Iterate over episodes (groups of sequential records).
+
+        Default: each record is its own single-record episode.
+        Override for benchmarks requiring sequential processing
+        with shared agent state within an episode.
+        """
+        for record in self.iter_records():
+            yield [record]
+
 
 __all__ = ["DatasetProvider"]

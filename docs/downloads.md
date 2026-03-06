@@ -11,31 +11,60 @@ OpenJarvis runs entirely on your hardware. Choose the interface that fits your w
 
 ## Desktop App
 
-The native desktop app bundles Ollama (the inference engine) and the OpenJarvis Python backend
-into a single installer. Download, open, and start chatting — no terminal required.
+The desktop app is a native window for the OpenJarvis chat UI. All inference and backend
+processing happens on your local machine — the app connects to the backend you start locally.
+
+!!! info "Backend required"
+    Start the backend before opening the desktop app. The quickstart script handles everything:
+    ```bash
+    git clone https://github.com/HazyResearch/OpenJarvis.git && cd OpenJarvis
+    ./scripts/quickstart.sh
+    ```
 
 ### Download
 
 | Platform | Download | Notes |
 |----------|----------|-------|
-| macOS (Apple Silicon) | [:material-download: **OpenJarvis.dmg**](https://github.com/HazyResearch/OpenJarvis/releases/latest/download/OpenJarvis_aarch64.dmg) | M1/M2/M3/M4 Macs |
-| macOS (Intel) | [:material-download: **OpenJarvis.dmg**](https://github.com/HazyResearch/OpenJarvis/releases/latest/download/OpenJarvis_x64.dmg) | Intel Macs (2020 and earlier) |
-| Windows (64-bit) | [:material-download: **OpenJarvis-setup.exe**](https://github.com/HazyResearch/OpenJarvis/releases/latest/download/OpenJarvis_x64-setup.exe) | Windows 10+ |
-| Linux (DEB) | [:material-download: **OpenJarvis.deb**](https://github.com/HazyResearch/OpenJarvis/releases/latest/download/OpenJarvis_amd64.deb) | Ubuntu, Debian |
-| Linux (RPM) | [:material-download: **OpenJarvis.rpm**](https://github.com/HazyResearch/OpenJarvis/releases/latest/download/OpenJarvis_amd64.rpm) | Fedora, RHEL |
+| macOS (Apple Silicon) | [:material-download: **OpenJarvis.dmg**](https://github.com/HazyResearch/OpenJarvis/releases/download/desktop-latest/OpenJarvis_1.0.0_aarch64.dmg) | M1/M2/M3/M4 Macs |
+| Windows (64-bit) | [:material-download: **OpenJarvis-setup.exe**](https://github.com/HazyResearch/OpenJarvis/releases/download/desktop-latest/OpenJarvis_1.0.0_x64-setup.exe) | Windows 10+ |
+| Linux (DEB) | [:material-download: **OpenJarvis.deb**](https://github.com/HazyResearch/OpenJarvis/releases/download/desktop-latest/OpenJarvis_1.0.0_amd64.deb) | Ubuntu, Debian |
+| Linux (RPM) | [:material-download: **OpenJarvis.rpm**](https://github.com/HazyResearch/OpenJarvis/releases/download/desktop-latest/OpenJarvis-1.0.0-1.x86_64.rpm) | Fedora, RHEL |
+| Linux (AppImage) | [:material-download: **OpenJarvis.AppImage**](https://github.com/HazyResearch/OpenJarvis/releases/download/desktop-latest/OpenJarvis_1.0.0_amd64.AppImage) | Any distro |
 
 !!! tip "All releases"
     Browse all versions on the [GitHub Releases](https://github.com/HazyResearch/OpenJarvis/releases) page.
 
+### macOS: "app is damaged" fix
+
+macOS Gatekeeper quarantines apps downloaded from the internet that aren't notarized
+by Apple. If you see **"OpenJarvis is damaged and can't be opened"**, run this in
+Terminal to clear the quarantine flag:
+
+```bash
+xattr -cr /Applications/OpenJarvis.app
+```
+
+Then open the app normally. If you installed from the DMG but haven't moved it to
+`/Applications` yet, point the command at wherever the `.app` bundle is:
+
+```bash
+xattr -cr ~/Downloads/OpenJarvis.app
+```
+
+!!! note
+    This is standard for open-source macOS apps distributed outside the App Store.
+    The command removes the quarantine extended attribute — it does not modify the app.
+
 ### What's included
 
-The desktop app ships with:
+The desktop app provides:
 
-- **Ollama** sidecar — inference engine runs automatically in the background
-- **OpenJarvis backend** — Python API server managed by the app
-- **Full chat UI** — same interface as the browser app
+- **Full chat UI** — same interface as the browser app, in a native window
 - **Energy monitoring** — real-time power consumption tracking
-- **Telemetry dashboard** — token throughput, latency, and cost comparison
+- **Telemetry dashboard** — token throughput, latency, and cost comparison vs. cloud models
+- **System tray** — quick access without keeping a terminal open
+
+The backend (Ollama, Python API server, inference) runs separately on your machine.
 
 ### Build from source
 
