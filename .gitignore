@@ -23,6 +23,7 @@ env/
 
 # Testing
 .pytest_cache/
+.ruff_cache/
 .coverage
 htmlcov/
 
@@ -75,5 +76,9 @@ docs/plans/
 # Tauri auto-generated schemas
 **/src-tauri/gen/schemas/
 
-# Rust build artifacts
-rust/target/.claude/.nfs*
+# NFS lock artifacts
+.nfs*
+**/.nfs*
+
+# Research output
+research_mining_*
