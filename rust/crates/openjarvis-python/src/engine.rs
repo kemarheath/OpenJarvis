@@ -69,6 +69,28 @@ impl PyEngine {
                     host.unwrap_or("http://localhost:8079"),
                 ),
             ),
+            "vllm_native" => openjarvis_engine::Engine::VLLM(
+                openjarvis_engine::VLLMEngine::new(
+                    host.unwrap_or("http://localhost"),
+                    8000,
+                    None,
+                    120.0,
+                ),
+            ),
+            "sglang_native" => openjarvis_engine::Engine::SGLang(
+                openjarvis_engine::SGLangEngine::new(
+                    host.unwrap_or("http://localhost"),
+                    30000,
+                    120.0,
+                ),
+            ),
+            "llamacpp_native" => openjarvis_engine::Engine::LlamaCppNative(
+                openjarvis_engine::LlamaCppEngine::new(
+                    host.unwrap_or("http://localhost"),
+                    8080,
+                    120.0,
+                ),
+            ),
             other => {
                 return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
                     format!("Unknown engine: {}", other),

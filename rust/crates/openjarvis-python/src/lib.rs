@@ -67,6 +67,8 @@ fn openjarvis_rust(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<agents::PySimpleAgent>()?;
     m.add_class::<agents::PyOrchestratorAgent>()?;
     m.add_class::<agents::PyNativeReActAgent>()?;
+    m.add_class::<agents::PyNativeOpenHandsAgent>()?;
+    m.add_class::<agents::PyMonitorOperativeAgent>()?;
     m.add_class::<agents::PyLoopGuard>()?;
 
     // --- Tools ---
@@ -84,6 +86,9 @@ fn openjarvis_rust(m: &Bound<'_, PyModule>) -> PyResult<()> {
     // --- Storage / Memory ---
     m.add_class::<storage::PySQLiteMemory>()?;
     m.add_class::<storage::PyBM25Memory>()?;
+    m.add_class::<storage::PyFAISSMemory>()?;
+    m.add_class::<storage::PyColBERTMemory>()?;
+    m.add_class::<storage::PyHybridMemory>()?;
     m.add_class::<storage::PyKnowledgeGraphMemory>()?;
 
     // --- Security ---
@@ -116,6 +121,8 @@ fn openjarvis_rust(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<learning::PyHeuristicRouter>()?;
     m.add_class::<learning::PyBanditRouterPolicy>()?;
     m.add_class::<learning::PyGRPORouterPolicy>()?;
+    m.add_class::<learning::PyOptimizationStore>()?;
+    m.add_class::<learning::PyLLMOptimizer>()?;
 
     // --- MCP ---
     m.add_class::<mcp::PyMcpServer>()?;

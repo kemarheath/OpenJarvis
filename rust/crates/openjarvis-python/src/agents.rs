@@ -172,6 +172,176 @@ impl PyNativeReActAgent {
     }
 }
 
+/// Python wrapper for NativeOpenHandsAgent.
+#[pyclass(name = "NativeOpenHandsAgent")]
+pub struct PyNativeOpenHandsAgent {
+    inner: Box<dyn OjAgent>,
+}
+
+#[pymethods]
+impl PyNativeOpenHandsAgent {
+    #[new]
+    #[pyo3(signature = (engine_key="ollama", host="http://localhost:11434", model="qwen3:8b", max_turns=10, temperature=0.7))]
+    fn new(
+        engine_key: &str,
+        host: &str,
+        model: &str,
+        max_turns: usize,
+        temperature: f64,
+    ) -> PyResult<Self> {
+        let config = openjarvis_core::JarvisConfig::default();
+        let engine = openjarvis_engine::get_engine_static(&config, Some(engine_key))
+            .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string()))?;
+        let adapter = openjarvis_engine::rig_adapter::RigModelAdapter::new(
+            Arc::new(engine),
+            model.to_string(),
+        );
+        let executor = Arc::new(openjarvis_tools::ToolExecutor::new(None, None));
+        let agent = openjarvis_agents::NativeOpenHandsAgent::new(
+            adapter,
+            executor,
+            max_turns,
+            temperature,
+        );
+        Ok(Self {
+            inner: Box::new(agent),
+        })
+    }
+
+    fn agent_id(&self) -> &str {
+        self.inner.agent_id()
+    }
+
+    fn accepts_tools(&self) -> bool {
+        self.inner.accepts_tools()
+    }
+
+    fn run(&self, input: &str) -> PyResult<PyAgentResult> {
+        let result = RUNTIME
+            .block_on(self.inner.run(input, None))
+            .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string()))?;
+        Ok(PyAgentResult {
+            content: result.content,
+            turns: result.turns,
+        })
+    }
+}
+
+/// Python wrapper for MonitorOperativeAgent.
+#[pyclass(name = "MonitorOperativeAgent")]
+pub struct PyMonitorOperativeAgent {
+    inner: Box<dyn OjAgent>,
+}
+
+#[pymethods]
+impl PyMonitorOperativeAgent {
+    /// Create a MonitorOperativeAgent.
+    ///
+    /// Strategy parameters are strings:
+    /// - `memory_extraction`: "causality_graph" | "scratchpad" | "structured_json" | "none"
+    /// - `observation_compression`: "summarize" | "truncate" | "none"
+    /// - `retrieval_strategy`: "hybrid_with_self_eval" | "keyword" | "semantic" | "none"
+    /// - `task_decomposition`: "phased" | "monolithic" | "hierarchical"
+    #[new]
+    #[pyo3(signature = (
+        engine_key="ollama",
+        host="http://localhost:11434",
+        model="qwen3:8b",
+        max_turns=10,
+        temperature=0.7,
+        memory_extraction="causality_graph",
+        observation_compression="summarize",
+        retrieval_strategy="hybrid_with_self_eval",
+        task_decomposition="phased",
+        compression_threshold=2000,
+        truncation_limit=2000
+    ))]
+    #[allow(clippy::too_many_arguments)]
+    fn new(
+        engine_key: &str,
+        host: &str,
+        model: &str,
+        max_turns: usize,
+        temperature: f64,
+        memory_extraction: &str,
+        observation_compression: &str,
+        retrieval_strategy: &str,
+        task_decomposition: &str,
+        compression_threshold: usize,
+        truncation_limit: usize,
+    ) -> PyResult<Self> {
+        let config = openjarvis_core::JarvisConfig::default();
+        let engine = openjarvis_engine::get_engine_static(&config, Some(engine_key))
+            .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string()))?;
+        let adapter = openjarvis_engine::rig_adapter::RigModelAdapter::new(
+            Arc::new(engine),
+            model.to_string(),
+        );
+        let executor = Arc::new(openjarvis_tools::ToolExecutor::new(None, None));
+
+        let mem_ext = match memory_extraction {
+            "scratchpad" => openjarvis_agents::MemoryExtraction::Scratchpad,
+            "structured_json" => openjarvis_agents::MemoryExtraction::StructuredJson,
+            "none" => openjarvis_agents::MemoryExtraction::None,
+            _ => openjarvis_agents::MemoryExtraction::CausalityGraph,
+        };
+        let obs_comp = match observation_compression {
+            "truncate" => openjarvis_agents::ObservationCompression::Truncate,
+            "none" => openjarvis_agents::ObservationCompression::None,
+            _ => openjarvis_agents::ObservationCompression::Summarize,
+        };
+        let ret_strat = match retrieval_strategy {
+            "keyword" => openjarvis_agents::RetrievalStrategy::Keyword,
+            "semantic" => openjarvis_agents::RetrievalStrategy::Semantic,
+            "none" => openjarvis_agents::RetrievalStrategy::None,
+            _ => openjarvis_agents::RetrievalStrategy::HybridWithSelfEval,
+        };
+        let task_dec = match task_decomposition {
+            "monolithic" => openjarvis_agents::TaskDecomposition::Monolithic,
+            "hierarchical" => openjarvis_agents::TaskDecomposition::Hierarchical,
+            _ => openjarvis_agents::TaskDecomposition::Phased,
+        };
+
+        let monitor_config = openjarvis_agents::MonitorConfig {
+            memory_extraction: mem_ext,
+            observation_compression: obs_comp,
+            retrieval_strategy: ret_strat,
+            task_decomposition: task_dec,
+            compression_threshold,
+            truncation_limit,
+        };
+
+        let agent = openjarvis_agents::MonitorOperativeAgent::new(
+            adapter,
+            executor,
+            max_turns,
+            temperature,
+            monitor_config,
+        );
+        Ok(Self {
+            inner: Box::new(agent),
+        })
+    }
+
+    fn agent_id(&self) -> &str {
+        self.inner.agent_id()
+    }
+
+    fn accepts_tools(&self) -> bool {
+        self.inner.accepts_tools()
+    }
+
+    fn run(&self, input: &str) -> PyResult<PyAgentResult> {
+        let result = RUNTIME
+            .block_on(self.inner.run(input, None))
+            .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(e.to_string()))?;
+        Ok(PyAgentResult {
+            content: result.content,
+            turns: result.turns,
+        })
+    }
+}
+
 /// Python wrapper for LoopGuard.
 #[pyclass(name = "LoopGuard")]
 pub struct PyLoopGuard {
