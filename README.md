@@ -89,18 +89,6 @@ uv run pytest tests/ -v
 
 See [Contributing](docs/development/contributing.md) for more.
 
-## The Five Pillars
-
-| Pillar | What it does | Key abstractions |
-|--------|-------------|-----------------|
-| **Intelligence** | Model management and routing | `RouterPolicy`, `QueryAnalyzer`, `ModelCatalog` |
-| **Engine** | Inference runtime abstraction | `InferenceEngine` ABC — Ollama, vLLM, SGLang, llama.cpp, MLX |
-| **Agents** | Pluggable reasoning strategies | `BaseAgent` ABC — Simple, Orchestrator, ReAct, OpenHands, OpenClaw |
-| **Tools** | Capabilities via MCP | `BaseTool` ABC — calculator, code interpreter, web search, memory; external MCP servers auto-discovered |
-| **Learning** | Trace-driven adaptation | `LearningPolicy` ABC — SFT (model routing), AgentAdvisor (restructuring), ICL (tool usage) |
-
-Every interaction produces a **Trace** — a structured record of the full reasoning chain. Learning policies consume traces to improve model selection, agent behavior, and tool usage over time.
-
 ## About
 
 OpenJarvis is part of [Intelligence Per Watt](https://www.intelligence-per-watt.ai/), a research initiative studying the efficiency of on-device AI systems. The project is developed at [Hazy Research](https://hazyresearch.stanford.edu/) and the [Scaling Intelligence Lab](https://scalingintelligence.stanford.edu/) at [Stanford SAIL](https://ai.stanford.edu/).
