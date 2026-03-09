@@ -12,7 +12,6 @@ Agents are the agentic logic layer of OpenJarvis. They determine how a query is 
 | `NativeOpenHandsAgent` | `native_openhands` | Yes          | Yes        | CodeAct-style code execution + tool calls    |
 | `RLMAgent`          | `rlm`             | Yes             | Yes        | Recursive LM with persistent REPL            |
 | `OpenHandsAgent`    | `openhands`       | No              | Yes        | Wraps real openhands-sdk                     |
-| `OpenClawAgent`     | `openclaw`        | Yes             | Yes        | External agent via HTTP or subprocess         |
 | `ClaudeCodeAgent`   | `claude_code`     | No              | Yes        | Claude Agent SDK via Node.js subprocess       |
 
 ---
@@ -259,38 +258,6 @@ The `OpenHandsAgent` wraps the real `openhands-sdk` package for AI-driven softwa
 
 ---
 
-## OpenClawAgent
-
-The `OpenClawAgent` wraps the OpenClaw Pi agent runtime, communicating via either HTTP or subprocess transport. It supports tool calling through the OpenClaw protocol.
-
-**How it works:**
-
-1. Checks transport health.
-2. Sends a `QUERY` protocol message through the transport.
-3. If the response is a `TOOL_CALL`, dispatches the tool locally via `ToolExecutor`.
-4. Sends the tool result back as a `TOOL_RESULT` message.
-5. Continues the tool-call loop until the response is a final answer or error (up to 10 turns).
-
-**Constructor parameters:**
-
-| Parameter    | Type                 | Default   | Description                               |
-|--------------|----------------------|-----------|-------------------------------------------|
-| `engine`     | `Any`                | `None`    | Inference engine (fallback/provider)       |
-| `model`      | `str`                | `""`      | Model identifier                          |
-| `transport`  | `OpenClawTransport`  | `None`    | Pre-configured transport (overrides mode)  |
-| `mode`       | `str`                | `"http"`  | Transport mode: `"http"` or `"subprocess"` |
-| `bus`        | `EventBus`           | `None`    | Event bus for telemetry                   |
-
-**Transport modes:**
-
-- **HTTP** (`HttpTransport`): Sends HTTP POST requests to an OpenClaw server.
-- **Subprocess** (`SubprocessTransport`): Spawns a Node.js process and communicates via stdin/stdout using JSON-line protocol.
-
-!!! warning "Node.js Requirement"
-    The subprocess transport mode requires Node.js 22+ to be installed on the system.
-
----
-
 ## Using Agents
 
 ### Via CLI
@@ -316,9 +283,6 @@ jarvis ask --agent rlm "Summarize this long document"
 
 # OpenHands SDK agent
 jarvis ask --agent openhands "Fix the bug in test_utils.py"
-
-# OpenClaw agent
-jarvis ask --agent openclaw "Tell me a story"
 ```
 
 ### Via Python SDK
@@ -544,9 +508,6 @@ jarvis ask --agent rlm "Summarize this long document"
 
 # OpenHands SDK agent
 jarvis ask --agent openhands "Fix the bug in test_utils.py"
-
-# OpenClaw agent
-jarvis ask --agent openclaw "Tell me a story"
 
 # Claude Code agent (requires Node.js 22+ and ANTHROPIC_API_KEY)
 jarvis ask --agent claude_code "Add docstrings to all functions in utils.py"
