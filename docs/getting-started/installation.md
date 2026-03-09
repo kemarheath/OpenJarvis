@@ -239,7 +239,7 @@ See the [Python SDK guide](../user-guide/python-sdk.md) for the full API referen
 |-------------|---------|-------|
 | Python | 3.10+ | Required |
 | Inference backend | Any | At least one of Ollama, vLLM, llama.cpp, SGLang, or a cloud API |
-| Node.js | 18+ | Required for the browser UI; 22+ for OpenClaw agent |
+| Node.js | 18+ | Required for the browser UI; 22+ for the WhatsApp Baileys channel bridge |
 
 ## Optional Extras
 

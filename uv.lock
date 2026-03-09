@@ -3391,6 +3391,7 @@ version = "1.0.0"
 source = { editable = "." }
 dependencies = [
     { name = "click" },
+    { name = "datasets" },
     { name = "httpx" },
     { name = "rich" },
     { name = "tomli", marker = "python_full_version < '3.11'" },
@@ -3562,6 +3563,7 @@ requires-dist = [
     { name = "colbert-ai", marker = "extra == 'memory-colbert'", specifier = ">=0.2" },
     { name = "croniter", marker = "extra == 'scheduler'", specifier = ">=2.0" },
     { name = "cryptography", marker = "extra == 'security-signing'", specifier = ">=43" },
+    { name = "datasets", specifier = ">=4.5.0" },
     { name = "deepgram-sdk", marker = "extra == 'speech-deepgram'", specifier = ">=3.0" },
     { name = "discord-py", marker = "extra == 'channel-discord'", specifier = ">=2.3" },
     { name = "docker", marker = "extra == 'sandbox-docker'", specifier = ">=7.0" },

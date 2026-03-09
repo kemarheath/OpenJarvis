@@ -390,7 +390,7 @@ class WorkArenaTaskEnv:
                 zip(open_urls, open_titles or [""] * len(open_urls))
             ):
                 tabs.append(f"  [{i}] {t} — {u}")
-            parts.append(f"## Open Tabs\n" + "\n".join(tabs))
+            parts.append("## Open Tabs\n" + "\n".join(tabs))
 
         return "\n\n".join(parts)
 

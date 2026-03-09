@@ -26,6 +26,8 @@ class TurnTrace:
     gpu_power_avg_watts: Optional[float] = None
     cpu_power_avg_watts: Optional[float] = None
     cost_usd: Optional[float] = None
+    # Per-action energy breakdown (lm_inference vs tool_call granularity)
+    action_energy_breakdown: Optional[List[Dict[str, Any]]] = None
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -42,6 +44,7 @@ class TurnTrace:
             "gpu_power_avg_watts": self.gpu_power_avg_watts,
             "cpu_power_avg_watts": self.cpu_power_avg_watts,
             "cost_usd": self.cost_usd,
+            "action_energy_breakdown": self.action_energy_breakdown,
         }
 
     @classmethod
@@ -60,6 +63,7 @@ class TurnTrace:
             gpu_power_avg_watts=d.get("gpu_power_avg_watts"),
             cpu_power_avg_watts=d.get("cpu_power_avg_watts"),
             cost_usd=d.get("cost_usd"),
+            action_energy_breakdown=d.get("action_energy_breakdown"),
         )
 
 
@@ -81,6 +85,8 @@ class QueryTrace:
     query_gpu_power_avg_watts: Optional[float] = None
     query_cpu_power_avg_watts: Optional[float] = None
     is_resolved: Optional[bool] = None
+    query_mbu_avg_pct: Optional[float] = None
+    query_mbu_max_pct: Optional[float] = None
 
     @property
     def num_turns(self) -> int:
@@ -184,6 +190,8 @@ class QueryTrace:
             "query_gpu_power_avg_watts": self.query_gpu_power_avg_watts,
             "query_cpu_power_avg_watts": self.query_cpu_power_avg_watts,
             "is_resolved": self.is_resolved,
+            "query_mbu_avg_pct": self.query_mbu_avg_pct,
+            "query_mbu_max_pct": self.query_mbu_max_pct,
         }
 
     @classmethod
@@ -202,6 +210,8 @@ class QueryTrace:
             query_gpu_power_avg_watts=d.get("query_gpu_power_avg_watts"),
             query_cpu_power_avg_watts=d.get("query_cpu_power_avg_watts"),
             is_resolved=d.get("is_resolved"),
+            query_mbu_avg_pct=d.get("query_mbu_avg_pct"),
+            query_mbu_max_pct=d.get("query_mbu_max_pct"),
         )
 
     def save_jsonl(self, path: Path) -> None:
@@ -253,6 +263,8 @@ class QueryTrace:
                 "completed": trace.completed,
                 "timed_out": trace.timed_out,
                 "is_resolved": trace.is_resolved,
+                "query_mbu_avg_pct": trace.query_mbu_avg_pct,
+                "query_mbu_max_pct": trace.query_mbu_max_pct,
                 "trace_json": json.dumps(trace.to_dict()),
             })
         return Dataset.from_list(rows)

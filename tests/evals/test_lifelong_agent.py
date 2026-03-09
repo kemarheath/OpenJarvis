@@ -998,8 +998,8 @@ class TestOSActionFormat:
 class TestMaxTurns:
     def test_db_max_turns(self) -> None:
         from openjarvis.evals.environments.lifelong_agent_env import (
-            DBEnvironment,
             MAX_TURNS_DB,
+            DBEnvironment,
         )
         env = DBEnvironment(use_mysql=False)
         assert env.max_turns == MAX_TURNS_DB
@@ -1007,8 +1007,8 @@ class TestMaxTurns:
 
     def test_kg_max_turns(self) -> None:
         from openjarvis.evals.environments.lifelong_agent_env import (
-            KGEnvironment,
             MAX_TURNS_KG,
+            KGEnvironment,
         )
         env = KGEnvironment()
         assert env.max_turns == MAX_TURNS_KG
@@ -1016,8 +1016,8 @@ class TestMaxTurns:
 
     def test_os_max_turns(self) -> None:
         from openjarvis.evals.environments.lifelong_agent_env import (
-            OSEnvironment,
             MAX_TURNS_OS,
+            OSEnvironment,
         )
         env = OSEnvironment()
         assert env.max_turns == MAX_TURNS_OS

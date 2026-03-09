@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 from collections.abc import AsyncIterator, Sequence
 from typing import Any, Dict, List
 
@@ -27,8 +28,12 @@ class OllamaEngine(InferenceEngine):
         self,
         host: str = "http://localhost:11434",
         *,
-        timeout: float = 120.0,
+        timeout: float = 1800.0,
     ) -> None:
+        # Allow OLLAMA_HOST env var to override the default
+        env_host = os.environ.get("OLLAMA_HOST")
+        if env_host:
+            host = env_host
         self._host = host.rstrip("/")
         self._client = httpx.Client(base_url=self._host, timeout=timeout)
 

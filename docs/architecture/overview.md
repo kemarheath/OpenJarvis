@@ -1,21 +1,18 @@
 # Architecture Overview
 
-OpenJarvis is a research framework for studying on-device AI systems. Its architecture is organized around **four core abstractions** -- Intelligence, Engine, Agentic Logic, and Memory -- plus a cross-cutting **Learning** system that ties them together through trace-driven feedback.
+OpenJarvis is a research framework for studying on-device AI systems. Its architecture is organized around **five core abstractions** -- Intelligence, Engine, Agentic Logic, Memory, and Learning -- that work together through trace-driven feedback.
 
 ---
 
-## The Four Pillars + Learning
+## The Five Pillars
 
 ```mermaid
 graph TB
-    subgraph "Core Pillars"
+    subgraph "The Five Pillars"
         INT["Intelligence<br/><i>Model definition<br/>& catalog</i>"]
         ENG["Engine<br/><i>Inference runtime<br/>backends</i>"]
         AGT["Agentic Logic<br/><i>Agents, tools,<br/>orchestration</i>"]
         MEM["Memory<br/><i>Persistent searchable<br/>storage</i>"]
-    end
-
-    subgraph "Cross-cutting"
         LRN["Learning & Traces<br/><i>Router policies,<br/>trace recording,<br/>feedback loop</i>"]
     end
 
@@ -62,7 +59,7 @@ Each engine is configured via its own sub-section in `config.toml` (e.g., `[engi
 
 ### Agentic Logic
 
-The Agentic Logic pillar implements **pluggable agents** that handle queries with varying levels of sophistication. The agent hierarchy is organized around `BaseAgent` (ABC with concrete helpers) and `ToolUsingAgent` (intermediate base for agents that accept tools, with `accepts_tools = True`). Eight agent types are available: `SimpleAgent` (single-turn, no tools), `OrchestratorAgent` (multi-turn tool-calling loop with function_calling and structured modes), `NativeReActAgent` (Thought-Action-Observation loop), `NativeOpenHandsAgent` (CodeAct-style code execution), `RLMAgent` (recursive LM with persistent REPL), `OpenHandsAgent` (wraps real `openhands-sdk`), `OpenClawAgent` (external agent via HTTP or subprocess transport), and `ClaudeCodeAgent` (Claude Agent SDK via Node.js subprocess).
+The Agentic Logic pillar implements **pluggable agents** that handle queries with varying levels of sophistication. The agent hierarchy is organized around `BaseAgent` (ABC with concrete helpers) and `ToolUsingAgent` (intermediate base for agents that accept tools, with `accepts_tools = True`). Seven agent types are available: `SimpleAgent` (single-turn, no tools), `OrchestratorAgent` (multi-turn tool-calling loop with function_calling and structured modes), `NativeReActAgent` (Thought-Action-Observation loop), `NativeOpenHandsAgent` (CodeAct-style code execution), `RLMAgent` (recursive LM with persistent REPL), `OpenHandsAgent` (wraps real `openhands-sdk`), and `ClaudeCodeAgent` (Claude Agent SDK via Node.js subprocess).
 
 The sandbox module (`openjarvis.sandbox`) adds a `SandboxedAgent` wrapper that runs any `BaseAgent` inside a Docker or Podman container with mount-security enforcement, and a `ContainerRunner` that manages the container lifecycle.
 
@@ -74,9 +71,9 @@ The Memory pillar provides **persistent, searchable storage** for documents and 
 
 The memory pipeline includes document ingestion, chunking, embedding generation, and context injection. When a user sends a query and `agent.context_from_memory` is enabled, relevant documents are retrieved and prepended to the prompt with source attribution.
 
-### Learning & Traces (Cross-cutting)
+### Learning & Traces
 
-The Learning system is a cross-cutting concern that connects all pillars through **trace-driven feedback**. Every agent interaction can produce a `Trace` capturing the full sequence of steps — routing decisions, memory retrieval, inference calls, tool invocations, and final responses. The `TraceAnalyzer` computes statistics from accumulated traces, and the `TraceDrivenPolicy` uses these statistics to learn which model/agent/tool combinations produce the best outcomes for different query types.
+The Learning system is the fifth pillar, connecting the other four through **trace-driven feedback**. Every agent interaction can produce a `Trace` capturing the full sequence of steps — routing decisions, memory retrieval, inference calls, tool invocations, and final responses. The `TraceAnalyzer` computes statistics from accumulated traces, and the `TraceDrivenPolicy` uses these statistics to learn which model/agent/tool combinations produce the best outcomes for different query types.
 
 The learning system is configured through nested sub-sections in `config.toml`: `[learning.routing]` controls the router policy (heuristic, learned, sft, grpo), `[learning.intelligence]` controls the model-level learning policy, `[learning.agent]` controls agent advisor and ICL updater policies, and `[learning.metrics]` sets the composite reward function weights.
 
@@ -160,10 +157,6 @@ src/openjarvis/
         rlm.py              RLMAgent (recursive LM with persistent REPL)
         openhands.py        OpenHandsAgent (wraps real openhands-sdk)
         react.py            Backward-compat shim (re-exports NativeReActAgent as ReActAgent)
-        openclaw.py         OpenClawAgent (HTTP/subprocess transport)
-        openclaw_protocol.py  Wire protocol (MessageType, serialize/deserialize)
-        openclaw_transport.py Transport ABC, HttpTransport, SubprocessTransport
-        openclaw_plugin.py  ProviderPlugin, MemorySearchManager
         claude_code.py      ClaudeCodeAgent (Claude Agent SDK via Node.js subprocess)
         claude_code_runner/ Bundled Node.js runner for the Claude Agent SDK
 
@@ -228,7 +221,6 @@ src/openjarvis/
 
     channels/           Channel messaging
         _stubs.py           BaseChannel ABC, ChannelMessage, ChannelStatus
-        openclaw_bridge.py  OpenClawChannelBridge (WS/HTTP bridge)
         whatsapp_baileys.py WhatsAppBaileysChannel (Baileys protocol via Node.js bridge)
         whatsapp_baileys_bridge/ Bundled Node.js Baileys bridge
 
@@ -290,7 +282,7 @@ graph LR
 | `AGENT_TURN_START` / `AGENT_TURN_END` | Agents | Track agent lifecycle |
 | `TELEMETRY_RECORD` | TelemetryStore | Publish telemetry records |
 | `TRACE_STEP` / `TRACE_COMPLETE` | TraceCollector | Trace lifecycle events |
-| `CHANNEL_MESSAGE_RECEIVED` / `CHANNEL_MESSAGE_SENT` | OpenClawChannelBridge, WhatsAppBaileysChannel | Track channel messaging |
+| `CHANNEL_MESSAGE_RECEIVED` / `CHANNEL_MESSAGE_SENT` | WhatsAppBaileysChannel | Track channel messaging |
 | `SECURITY_SCAN` / `SECURITY_ALERT` / `SECURITY_BLOCK` | GuardrailsEngine | Track security scanning |
 | `scheduler_task_start` / `scheduler_task_end` | TaskScheduler | Track scheduled task execution |
 

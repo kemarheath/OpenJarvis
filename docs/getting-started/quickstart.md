@@ -176,7 +176,7 @@ Agents add multi-turn reasoning and tool-calling capabilities. The `orchestrator
 | `simple` | Single-turn, no tools. Sends the query directly to the model. |
 | `orchestrator` | Multi-turn tool-calling loop. Invokes tools iteratively until it has an answer. |
 | `custom` | Template for user-defined agent logic. |
-| `openclaw` | HTTP/subprocess transport to external OpenClaw agent processes. |
+| `operative` | Task-oriented agent with structured planning and execution. |
 
 ### Available Built-in Tools
 

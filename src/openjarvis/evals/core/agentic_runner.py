@@ -488,6 +488,20 @@ class AgenticRunner:
         query_gpu_power_avg = _compute_power_avg(readings, "gpu_power_w")
         query_cpu_power_avg = _compute_power_avg(readings, "cpu_power_w")
 
+        # Extract MBU from telemetry readings
+        mbu_values = [
+            getattr(s, "gpu_memory_bandwidth_utilization_pct", None)
+            for s in readings
+        ]
+        mbu_values = [
+            v for v in mbu_values
+            if v is not None and v >= 0
+        ]
+        query_mbu_avg = (
+            statistics.mean(mbu_values) if mbu_values else None
+        )
+        query_mbu_max = max(mbu_values) if mbu_values else None
+
         trace = QueryTrace(
             query_id=query_id,
             workload_type=str(workload_type),
@@ -501,12 +515,42 @@ class AgenticRunner:
             query_gpu_power_avg_watts=query_gpu_power_avg,
             query_cpu_power_avg_watts=query_cpu_power_avg,
             is_resolved=record.metadata.get("is_resolved"),
+            query_mbu_avg_pct=query_mbu_avg,
+            query_mbu_max_pct=query_mbu_max,
         )
 
         # Correlate energy with trace
         trace = self._correlate_energy(trace, readings)
 
         return trace
+
+    @staticmethod
+    def _action_energy_from_readings(
+        readings: list[Any],
+        start_s: float,
+        end_s: float,
+    ) -> dict[str, Optional[float]]:
+        """Compute energy for a time span from telemetry readings.
+
+        Events use ``time.time()`` (epoch seconds); telemetry samples use
+        ``time.time_ns()`` (epoch nanoseconds).  Convert and filter.
+        """
+        start_ns = int(start_s * 1e9)
+        end_ns = int(end_s * 1e9)
+        window = [
+            r for r in readings
+            if start_ns <= r.timestamp_ns <= end_ns
+        ]
+        gpu_energy = _compute_energy_delta(window, "gpu_energy_j")
+        cpu_energy = _compute_energy_delta(window, "cpu_energy_j")
+        avg_gpu_power = _compute_power_avg(window, "gpu_power_w")
+        avg_cpu_power = _compute_power_avg(window, "cpu_power_w")
+        return {
+            "gpu_energy_joules": gpu_energy,
+            "cpu_energy_joules": cpu_energy,
+            "avg_gpu_power_watts": avg_gpu_power,
+            "avg_cpu_power_watts": avg_cpu_power,
+        }
 
     def _build_turn_traces(
         self,
@@ -522,6 +566,8 @@ class AgenticRunner:
         tool_start_times: dict[str, float] = {}
         input_tokens = 0
         output_tokens = 0
+        # Collect per-action time spans for energy attribution
+        current_action_spans: list[dict[str, Any]] = []
 
         for event in events:
             etype = event.event_type
@@ -533,9 +579,29 @@ class AgenticRunner:
                 wall_clock = 0.0
                 if current_turn_start is not None:
                     wall_clock = event.timestamp - current_turn_start
+                    current_action_spans.append({
+                        "action_type": "lm_inference",
+                        "start_s": current_turn_start,
+                        "end_s": event.timestamp,
+                        "duration_s": wall_clock,
+                    })
 
                 input_tokens = event.metadata.get("prompt_tokens", 0)
                 output_tokens = event.metadata.get("completion_tokens", 0)
+
+                # Compute per-action energy if readings available
+                action_breakdown = None
+                if readings and current_action_spans:
+                    action_breakdown = []
+                    for span in current_action_spans:
+                        energy = self._action_energy_from_readings(
+                            readings, span["start_s"], span["end_s"],
+                        )
+                        action_breakdown.append({
+                            "action_type": span["action_type"],
+                            "duration_s": span["duration_s"],
+                            **energy,
+                        })
 
                 turn = TurnTrace(
                     turn_index=current_turn_index,
@@ -544,6 +610,7 @@ class AgenticRunner:
                     tools_called=list(current_tools),
                     tool_latencies_s=dict(current_tool_latencies),
                     wall_clock_s=wall_clock,
+                    action_energy_breakdown=action_breakdown,
                 )
                 turns.append(turn)
 
@@ -551,6 +618,7 @@ class AgenticRunner:
                 current_turn_start = None
                 current_tools = []
                 current_tool_latencies = {}
+                current_action_spans = []
                 input_tokens = 0
                 output_tokens = 0
 
@@ -563,9 +631,14 @@ class AgenticRunner:
                 current_tools.append(tool_name)
                 start_ts = tool_start_times.pop(tool_name, None)
                 if start_ts is not None:
-                    current_tool_latencies[tool_name] = (
-                        event.timestamp - start_ts
-                    )
+                    duration = event.timestamp - start_ts
+                    current_tool_latencies[tool_name] = duration
+                    current_action_spans.append({
+                        "action_type": f"tool_call:{tool_name}",
+                        "start_s": start_ts,
+                        "end_s": event.timestamp,
+                        "duration_s": duration,
+                    })
 
         # Synthetic turn if events but no complete LM_START/END pair
         if not turns and events:

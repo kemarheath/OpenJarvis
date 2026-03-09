@@ -16,7 +16,7 @@ from __future__ import annotations
 import logging
 import os
 import random
-from typing import Any, Dict, Iterable, List, Optional
+from typing import Iterable, List, Optional
 
 from openjarvis.evals.core.dataset import DatasetProvider
 from openjarvis.evals.core.types import EvalRecord

@@ -198,7 +198,7 @@ context_from_memory = true
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `default_agent` | string | `"simple"` | Default agent to use. Available: `simple`, `orchestrator`, `react`, `custom`, `openclaw`. |
+| `default_agent` | string | `"simple"` | Default agent to use. Available: `simple`, `orchestrator`, `react`, `operative`, `monitor_operative`. |
 | `max_turns` | int | `10` | Maximum number of tool-calling turns for the orchestrator agent before it must produce a final answer. |
 | `tools` | string | `""` | Comma-separated list of tools to enable by default (e.g., `"calculator,think"`). |
 | `objective` | string | `""` | Concise purpose string for routing, learning, and documentation. |

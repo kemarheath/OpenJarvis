@@ -7,8 +7,6 @@ import logging
 from pathlib import Path
 from typing import Optional
 
-LOGGER = logging.getLogger(__name__)
-
 import click
 from rich.console import Console
 from rich.progress import (
@@ -28,6 +26,8 @@ from openjarvis.evals.core.display import (
     print_subject_table,
     print_suite_summary,
 )
+
+LOGGER = logging.getLogger(__name__)
 
 # Registry of available benchmarks and their metadata
 BENCHMARKS = {
@@ -232,7 +232,7 @@ def _build_dataset(benchmark: str, subset: str | None = None):
         return AMABenchDataset()
     elif benchmark == "lifelong-agent":
         from openjarvis.evals.datasets.lifelong_agent import LifelongAgentDataset
-        return LifelongAgentDataset(subset=subset or "database")
+        return LifelongAgentDataset(subset=subset or "db_bench")
     elif benchmark == "deepplanning":
         from openjarvis.evals.datasets.deepplanning import DeepPlanningDataset
         return DeepPlanningDataset()
@@ -827,7 +827,8 @@ def main():
 @click.option("--model-filter", default=None,
               help="Filter models by name substring (for multi-model configs)")
 @click.option("--judge-engine", default="cloud",
-              help="Engine key for LLM judge (default: cloud). Use 'vllm' to judge locally.")
+              help="Engine key for LLM judge (default: cloud). "
+              "Use 'vllm' to judge locally.")
 @click.option("--agentic", is_flag=True, default=False,
               help="Use AgenticRunner for multi-turn agent execution")
 @click.option("--episode-mode", is_flag=True, default=False,
@@ -924,7 +925,10 @@ def run(ctx, config_path, benchmark, backend, model, engine_key, agent_name,
         workers=max_workers,
     )
     if episode_mode:
-        console.print("  [cyan]Mode:[/cyan]       episode (sequential + lifelong learning)")
+        console.print(
+            "  [cyan]Mode:[/cyan]       episode "
+            "(sequential + lifelong learning)"
+        )
 
     if agentic:
         # --- Agentic runner path ---

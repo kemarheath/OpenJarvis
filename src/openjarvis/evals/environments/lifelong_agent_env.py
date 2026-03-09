@@ -273,13 +273,17 @@ class DBEnvironment(TaskEnvironment):
                     agent_dml = sql
                     break
             if not agent_dml:
-                agent_dml = self._agent_sql_history[-1] if self._agent_sql_history else ""
+                agent_dml = (
+                    self._agent_sql_history[-1]
+                    if self._agent_sql_history else ""
+                )
             norm_agent = _normalize_sql(agent_dml)
             norm_expected = _normalize_sql(expected_sql)
             is_correct = norm_agent == norm_expected
             meta["comparison_detail"] = (
                 "normalized_sql_match" if is_correct
-                else f"normalized_sql_mismatch: expected={norm_expected!r}, got={norm_agent!r}"
+                else f"normalized_sql_mismatch: "
+                f"expected={norm_expected!r}, got={norm_agent!r}"
             )
             meta["actual_row_count"] = len(actual_rows)
             return is_correct, meta

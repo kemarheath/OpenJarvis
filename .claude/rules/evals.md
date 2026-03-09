@@ -3,7 +3,7 @@
 ## Overview
 The eval framework lives in `src/openjarvis/evals/` and is run via:
 ```bash
-uv run python -m openjarvis.evals --config src/openjarvis/evals/configs/<config>.toml
+uv run python -m openjarvis.evals run -c src/openjarvis/evals/configs/<config>.toml
 ```
 
 ## Structure

@@ -35,7 +35,9 @@ PRICING: Dict[str, tuple[float, float]] = {
     "gemini-3-pro": (2.00, 12.00),
     "gemini-3-flash": (0.50, 3.00),
     "gemini-3.1-pro-preview": (2.50, 15.00),
+    "gemini-3.1-flash-lite-preview": (0.30, 2.50),
     "gemini-3-flash-preview": (0.50, 3.00),
+    "claude-haiku-4-5-20251001": (1.00, 5.00),
 }
 
 # Well-known model IDs per provider
@@ -49,6 +51,7 @@ _ANTHROPIC_MODELS = [
     "claude-opus-4-6",
     "claude-sonnet-4-6",
     "claude-haiku-4-5",
+    "claude-haiku-4-5-20251001",
 ]
 _GOOGLE_MODELS = [
     "gemini-2.5-pro",
@@ -56,6 +59,7 @@ _GOOGLE_MODELS = [
     "gemini-3-pro",
     "gemini-3-flash",
     "gemini-3.1-pro-preview",
+    "gemini-3.1-flash-lite-preview",
     "gemini-3-flash-preview",
 ]
 

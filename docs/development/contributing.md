@@ -13,7 +13,7 @@ contribute code to OpenJarvis.
 |---|---|---|
 | Python | 3.10+ | Required |
 | [uv](https://docs.astral.sh/uv/) | Latest | Package manager |
-| Node.js | 22+ | Only needed for OpenClaw agent |
+| Node.js | 22+ | Only needed for ClaudeCodeAgent and WhatsApp channel |
 
 ### Clone and Install
 
@@ -205,10 +205,8 @@ src/openjarvis/
         rlm.py                  # RLMAgent — recursive LM with persistent REPL
         openhands.py            # OpenHandsAgent — wraps real openhands-sdk
         react.py                # Backward-compat shim (re-exports NativeReActAgent)
-        openclaw.py             # OpenClawAgent — HTTP/subprocess transport
-        openclaw_protocol.py    # OpenClaw message protocol
-        openclaw_transport.py   # OpenClaw transports (HTTP, subprocess)
-        openclaw_plugin.py      # OpenClaw provider/memory plugins
+        claude_code.py          # ClaudeCodeAgent — Claude Agent SDK via Node.js subprocess
+        claude_code_runner/     # Bundled Node.js runner for the Claude Agent SDK
 
     memory/                     # Memory / retrieval backends
         _stubs.py               # MemoryBackend ABC, RetrievalResult
