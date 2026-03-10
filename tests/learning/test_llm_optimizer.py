@@ -35,7 +35,7 @@ def _make_search_space() -> SearchSpace:
                 dim_type="categorical",
                 values=["simple", "orchestrator", "native_react"],
                 description="Agent architecture",
-                pillar="agent",
+                primitive="agent",
             ),
             SearchDimension(
                 name="intelligence.temperature",
@@ -43,7 +43,7 @@ def _make_search_space() -> SearchSpace:
                 low=0.0,
                 high=1.0,
                 description="Generation temperature",
-                pillar="intelligence",
+                primitive="intelligence",
             ),
             SearchDimension(
                 name="agent.max_turns",
@@ -51,7 +51,7 @@ def _make_search_space() -> SearchSpace:
                 low=1,
                 high=30,
                 description="Maximum reasoning turns",
-                pillar="agent",
+                primitive="agent",
             ),
         ],
         fixed={"engine": "ollama"},
@@ -836,9 +836,9 @@ class TestAnalyzeTrialStructured:
         feedback_json = json.dumps({
             "summary_text": "Good accuracy but high latency",
             "failure_patterns": ["timeout on complex queries"],
-            "pillar_ratings": {"agent": "high", "intelligence": "medium"},
+            "primitive_ratings": {"agent": "high", "intelligence": "medium"},
             "suggested_changes": ["reduce max_turns"],
-            "target_pillar": "agent",
+            "target_primitive": "agent",
         })
         response = f"```json\n{feedback_json}\n```"
         backend = _make_mock_backend(response)
@@ -852,9 +852,9 @@ class TestAnalyzeTrialStructured:
         assert isinstance(result, TrialFeedback)
         assert result.summary_text == "Good accuracy but high latency"
         assert result.failure_patterns == ["timeout on complex queries"]
-        assert result.pillar_ratings == {"agent": "high", "intelligence": "medium"}
+        assert result.primitive_ratings == {"agent": "high", "intelligence": "medium"}
         assert result.suggested_changes == ["reduce max_turns"]
-        assert result.target_pillar == "agent"
+        assert result.target_primitive == "agent"
 
     def test_analyze_trial_fallback_to_text(self) -> None:
         """Unparseable response wraps as summary_text."""
@@ -871,16 +871,16 @@ class TestAnalyzeTrialStructured:
         assert isinstance(result, TrialFeedback)
         assert "good results" in result.summary_text
         assert result.failure_patterns == []
-        assert result.target_pillar == ""
+        assert result.target_primitive == ""
 
     def test_analyze_trial_with_sample_scores(self) -> None:
         """Verify sample_scores are included in the prompt."""
         feedback_json = json.dumps({
             "summary_text": "Analysis with scores",
             "failure_patterns": [],
-            "pillar_ratings": {},
+            "primitive_ratings": {},
             "suggested_changes": [],
-            "target_pillar": "",
+            "target_primitive": "",
         })
         response = f"```json\n{feedback_json}\n```"
         backend = _make_mock_backend(response)
@@ -938,7 +938,7 @@ class TestProposeTargeted:
         # Non-target params should be preserved from base
         assert result.params["intelligence.temperature"] == 0.5
 
-    def test_prompt_mentions_target_pillar(self) -> None:
+    def test_prompt_mentions_target_primitive(self) -> None:
         response = '```json\n{"params": {}, "reasoning": "ok"}\n```'
         backend = _make_mock_backend(response)
         opt = LLMOptimizer(

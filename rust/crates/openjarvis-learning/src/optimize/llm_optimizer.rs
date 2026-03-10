@@ -138,19 +138,19 @@ impl LLMOptimizer {
         }
     }
 
-    /// Propose a config that only changes one pillar.
+    /// Propose a config that only changes one primitive.
     pub fn propose_targeted(
         &self,
         history: &[TrialResult],
         base_config: &TrialConfig,
-        target_pillar: &str,
+        target_primitive: &str,
         frontier_ids: Option<&HashSet<String>>,
     ) -> TrialConfig {
         let trial_id = new_trial_id();
 
         if let Some(ref backend) = self.backend {
             let prompt =
-                self.build_targeted_prompt(history, base_config, target_pillar, frontier_ids);
+                self.build_targeted_prompt(history, base_config, target_primitive, frontier_ids);
             let response = backend.generate(
                 &prompt,
                 &self.optimizer_model,
@@ -162,9 +162,9 @@ impl LLMOptimizer {
 
             // Enforce constraint: preserve non-target params from base_config
             let mut merged = base_config.params.clone();
-            let target_prefix = format!("{target_pillar}.");
+            let target_prefix = format!("{target_primitive}.");
             let alt_prefix = {
-                let trimmed = target_pillar.trim_end_matches('s');
+                let trimmed = target_primitive.trim_end_matches('s');
                 format!("{trimmed}.")
             };
             for (key, value) in &proposed.params {
@@ -184,7 +184,7 @@ impl LLMOptimizer {
         TrialConfig {
             trial_id,
             params: base_config.params.clone(),
-            reasoning: format!("Targeted mutation on {target_pillar} (no backend)"),
+            reasoning: format!("Targeted mutation on {target_primitive} (no backend)"),
         }
     }
 
@@ -240,9 +240,9 @@ impl LLMOptimizer {
                  Provide your analysis as a JSON object inside a ```json code block with:\n\
                  1. \"summary_text\": string with detailed analysis\n\
                  2. \"failure_patterns\": list of identified failure patterns\n\
-                 3. \"pillar_ratings\": dict mapping pillar names to \"high\"/\"medium\"/\"low\"\n\
+                 3. \"primitive_ratings\": dict mapping primitive names to \"high\"/\"medium\"/\"low\"\n\
                  4. \"suggested_changes\": list of specific config changes to try\n\
-                 5. \"target_pillar\": which pillar to change next",
+                 5. \"target_primitive\": which primitive to change next",
                 format_config_params(&trial.params),
             );
             let response = backend.generate(
@@ -347,7 +347,7 @@ impl LLMOptimizer {
         &self,
         history: &[TrialResult],
         base_config: &TrialConfig,
-        target_pillar: &str,
+        target_primitive: &str,
         frontier_ids: Option<&HashSet<String>>,
     ) -> String {
         let mut lines = Vec::new();
@@ -359,9 +359,9 @@ impl LLMOptimizer {
         lines.push(format_config_params(&base_config.params));
         lines.push(String::new());
 
-        lines.push(format!("## Target Pillar: {target_pillar}"));
+        lines.push(format!("## Target Primitive: {target_primitive}"));
         lines.push(format!(
-            "ONLY change parameters under the '{target_pillar}' pillar. \
+            "ONLY change parameters under the '{target_primitive}' primitive. \
              Keep all other parameters exactly as they are."
         ));
         lines.push(String::new());
@@ -375,7 +375,7 @@ impl LLMOptimizer {
         lines.push(
             format!(
                 "Return a JSON object inside a ```json code block with:\n\
-                 1. \"params\": dict of config params (only change {target_pillar} params)\n\
+                 1. \"params\": dict of config params (only change {target_primitive} params)\n\
                  2. \"reasoning\": string explaining your changes"
             ),
         );
@@ -599,19 +599,19 @@ fn format_history(
                     fb.failure_patterns.join(", ")
                 ));
             }
-            if !fb.pillar_ratings.is_empty() {
+            if !fb.primitive_ratings.is_empty() {
                 let ratings: Vec<String> = {
-                    let mut sorted: Vec<_> = fb.pillar_ratings.iter().collect();
+                    let mut sorted: Vec<_> = fb.primitive_ratings.iter().collect();
                     sorted.sort_by_key(|(k, _)| k.as_str());
                     sorted
                         .iter()
                         .map(|(k, v)| format!("{k}={v}"))
                         .collect()
                 };
-                lines.push(format!("Pillar ratings: {}", ratings.join(", ")));
+                lines.push(format!("Primitive ratings: {}", ratings.join(", ")));
             }
-            if !fb.target_pillar.is_empty() {
-                lines.push(format!("Target pillar: {}", fb.target_pillar));
+            if !fb.target_primitive.is_empty() {
+                lines.push(format!("Target primitive: {}", fb.target_primitive));
             }
         } else if !result.analysis.is_empty() {
             lines.push(format!("Analysis: {}", result.analysis));
@@ -720,15 +720,15 @@ mod tests {
 {
   "summary_text": "Good result overall",
   "failure_patterns": ["timeout"],
-  "pillar_ratings": {"intelligence": "high"},
+  "primitive_ratings": {"intelligence": "high"},
   "suggested_changes": ["lower temp"],
-  "target_pillar": "intelligence"
+  "target_primitive": "intelligence"
 }
 ```"#;
         let fb = parse_feedback_response(response);
         assert_eq!(fb.summary_text, "Good result overall");
         assert_eq!(fb.failure_patterns, vec!["timeout"]);
-        assert_eq!(fb.target_pillar, "intelligence");
+        assert_eq!(fb.target_primitive, "intelligence");
     }
 
     #[test]

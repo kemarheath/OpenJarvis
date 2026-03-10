@@ -29,14 +29,14 @@ def _sample_search_space() -> SearchSpace:
                 name="agent.type",
                 dim_type="categorical",
                 values=["simple", "orchestrator"],
-                pillar="agent",
+                primitive="agent",
             ),
             SearchDimension(
                 name="intelligence.temperature",
                 dim_type="continuous",
                 low=0.0,
                 high=1.0,
-                pillar="intelligence",
+                primitive="intelligence",
             ),
         ],
         fixed={"engine": "ollama"},
@@ -696,7 +696,7 @@ class TestParetoFrontier:
 class TestTargetedAndMerge:
     """Tests for targeted mutation and merge in the run loop."""
 
-    def test_targeted_proposal_used_when_target_pillar_set(self) -> None:
+    def test_targeted_proposal_used_when_target_primitive_set(self) -> None:
         optimizer = MagicMock()
         runner = MagicMock()
 
@@ -710,11 +710,11 @@ class TestTargetedAndMerge:
         optimizer.optimizer_model = "m"
         runner.benchmark = "b"
 
-        # Trials 0-2: normal. Trial 2 feedback has target_pillar
+        # Trials 0-2: normal. Trial 2 feedback has target_primitive
         fb_normal = TrialFeedback(summary_text="ok")
         fb_targeted = TrialFeedback(
             summary_text="agent needs tuning",
-            target_pillar="agent",
+            target_primitive="agent",
         )
 
         optimizer.analyze_trial.side_effect = [

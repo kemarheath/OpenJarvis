@@ -282,9 +282,9 @@ class OptimizationEngine:
             # Propose next (unless this was the last trial)
             if trial_num < self.max_trials:
                 # Decide proposal strategy
-                target_pillar = ""
+                target_primitive = ""
                 if result.structured_feedback:
-                    target_pillar = result.structured_feedback.target_pillar
+                    target_primitive = result.structured_feedback.target_primitive
 
                 if (
                     trial_num % 5 == 0
@@ -295,12 +295,12 @@ class OptimizationEngine:
                     config = self.llm_optimizer.propose_merge(
                         candidates, history, frontier_ids=frontier_ids,
                     )
-                elif target_pillar and trial_num > 2:
-                    # Targeted mutation on the suggested pillar
+                elif target_primitive and trial_num > 2:
+                    # Targeted mutation on the suggested primitive
                     config = self.llm_optimizer.propose_targeted(
                         history,
                         result.config,
-                        target_pillar,
+                        target_primitive,
                         frontier_ids=frontier_ids,
                     )
                 else:

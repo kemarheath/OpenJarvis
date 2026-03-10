@@ -44,9 +44,9 @@ def build_search_space(config: Dict[str, Any]) -> SearchSpace:
 
     dimensions: List[SearchDimension] = []
     for entry in search_entries:
-        # Infer pillar from the first segment of the dotted name
+        # Infer primitive from the first segment of the dotted name
         name = entry.get("name", "")
-        pillar = name.split(".")[0] if "." in name else ""
+        primitive = name.split(".")[0] if "." in name else ""
 
         dimensions.append(
             SearchDimension(
@@ -56,7 +56,7 @@ def build_search_space(config: Dict[str, Any]) -> SearchSpace:
                 low=entry.get("low"),
                 high=entry.get("high"),
                 description=entry.get("description", ""),
-                pillar=pillar,
+                primitive=primitive,
             )
         )
 
@@ -68,12 +68,12 @@ def build_search_space(config: Dict[str, Any]) -> SearchSpace:
 
 
 # ---------------------------------------------------------------------------
-# Default search space covering all 5 pillars
+# Default search space covering all 5 primitives
 # ---------------------------------------------------------------------------
 
 DEFAULT_SEARCH_SPACE = SearchSpace(
     dimensions=[
-        # Intelligence pillar
+        # Intelligence primitive
         SearchDimension(
             name="intelligence.model",
             dim_type="categorical",
@@ -88,7 +88,7 @@ DEFAULT_SEARCH_SPACE = SearchSpace(
                 "deepseek-r1:8b",
             ],
             description="The LLM model to use for generation",
-            pillar="intelligence",
+            primitive="intelligence",
         ),
         SearchDimension(
             name="intelligence.temperature",
@@ -96,7 +96,7 @@ DEFAULT_SEARCH_SPACE = SearchSpace(
             low=0.0,
             high=1.0,
             description="Generation temperature (0 = deterministic, 1 = creative)",
-            pillar="intelligence",
+            primitive="intelligence",
         ),
         SearchDimension(
             name="intelligence.max_tokens",
@@ -104,7 +104,7 @@ DEFAULT_SEARCH_SPACE = SearchSpace(
             low=256,
             high=8192,
             description="Maximum tokens to generate per response",
-            pillar="intelligence",
+            primitive="intelligence",
         ),
         SearchDimension(
             name="intelligence.top_p",
@@ -112,15 +112,15 @@ DEFAULT_SEARCH_SPACE = SearchSpace(
             low=0.0,
             high=1.0,
             description="Nucleus sampling probability threshold",
-            pillar="intelligence",
+            primitive="intelligence",
         ),
         SearchDimension(
             name="intelligence.system_prompt",
             dim_type="text",
             description="System prompt to guide model behavior",
-            pillar="intelligence",
+            primitive="intelligence",
         ),
-        # Engine pillar
+        # Engine primitive
         SearchDimension(
             name="engine.backend",
             dim_type="categorical",
@@ -130,15 +130,15 @@ DEFAULT_SEARCH_SPACE = SearchSpace(
                 "uzu", "apple_fm",
             ],
             description="Inference engine backend",
-            pillar="engine",
+            primitive="engine",
         ),
-        # Agent pillar
+        # Agent primitive
         SearchDimension(
             name="agent.type",
             dim_type="categorical",
             values=["simple", "orchestrator", "native_react", "native_openhands"],
             description="Agent architecture to use",
-            pillar="agent",
+            primitive="agent",
         ),
         SearchDimension(
             name="agent.max_turns",
@@ -146,9 +146,9 @@ DEFAULT_SEARCH_SPACE = SearchSpace(
             low=1,
             high=30,
             description="Maximum number of agent reasoning turns",
-            pillar="agent",
+            primitive="agent",
         ),
-        # Tools pillar
+        # Tools primitive
         SearchDimension(
             name="tools.tool_set",
             dim_type="subset",
@@ -166,15 +166,15 @@ DEFAULT_SEARCH_SPACE = SearchSpace(
                 "database_query",
             ],
             description="Set of tools available to the agent",
-            pillar="tools",
+            primitive="tools",
         ),
-        # Learning pillar
+        # Learning primitive
         SearchDimension(
             name="learning.routing_policy",
             dim_type="categorical",
             values=["heuristic", "grpo", "bandit", "learned"],
             description="Router policy for model/agent selection",
-            pillar="learning",
+            primitive="learning",
         ),
     ],
     fixed={},

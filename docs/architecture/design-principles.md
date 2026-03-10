@@ -31,9 +31,9 @@ graph LR
     ABC -.->|"extend"| F
 ```
 
-This pattern applies across all four pillars:
+This pattern applies across all five primitives:
 
-| Pillar | ABC | Implementations |
+| Primitive | ABC | Implementations |
 |--------|-----|----------------|
 | Engine | `InferenceEngine` | Ollama, vLLM, SGLang, llama.cpp, Cloud |
 | Memory | `MemoryBackend` | SQLite, FAISS, ColBERT, BM25, Hybrid |

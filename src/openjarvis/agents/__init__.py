@@ -1,4 +1,4 @@
-"""Agents pillar — multi-turn reasoning and tool use."""
+"""Agents primitive — multi-turn reasoning and tool use."""
 
 from __future__ import annotations
 

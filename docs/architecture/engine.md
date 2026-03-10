@@ -1,6 +1,6 @@
-# Inference Engine Pillar
+# Inference Engine Primitive
 
-The Engine pillar provides the **inference runtime** -- the layer that connects OpenJarvis to language model servers. All backends implement a uniform interface, making it straightforward to swap between local and cloud inference without changing application code.
+The Engine primitive provides the **inference runtime** -- the layer that connects OpenJarvis to language model servers. All backends implement a uniform interface, making it straightforward to swap between local and cloud inference without changing application code.
 
 ---
 

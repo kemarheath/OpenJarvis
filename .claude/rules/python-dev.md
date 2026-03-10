@@ -1,8 +1,8 @@
 # Python Development
 
-## Architecture: The Five Pillars
+## Architecture: The Five Primitives
 
-All pillars are wired together by `JarvisSystem` (`src/openjarvis/system.py`) which is constructed from `configs/openjarvis/config.toml` (or `~/.openjarvis/config.toml`).
+All primitives are wired together by `JarvisSystem` (`src/openjarvis/system.py`) which is constructed from `configs/openjarvis/config.toml` (or `~/.openjarvis/config.toml`).
 
 ### 1. Intelligence (`src/openjarvis/intelligence/`)
 Model selection, provider routing. Config section: `[intelligence]`.

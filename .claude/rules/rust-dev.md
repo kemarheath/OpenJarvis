@@ -2,7 +2,7 @@
 
 ## Workspace Layout
 
-The Rust implementation lives in `rust/` and mirrors the Python pillars:
+The Rust implementation lives in `rust/` and mirrors the Python primitives:
 
 ```
 rust/

@@ -399,7 +399,7 @@ class BenchmarkResult:
 - **Backwards compatible**: Avoid breaking existing interfaces without
   discussion
 
-### Adding a New Pillar Component
+### Adding a New Primitive Component
 
 When adding a new engine, memory backend, agent, tool, benchmark, or router
 policy:

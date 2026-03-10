@@ -499,4 +499,4 @@ j.close()
 - [Configuration](configuration.md) — Fine-tune engine hosts, model routing, memory settings, and more
 - [CLI Reference](../user-guide/cli.md) — Full reference for all CLI commands and options
 - [Python SDK](../user-guide/python-sdk.md) — Detailed SDK documentation
-- [Architecture Overview](../architecture/overview.md) — Understand the four-pillar design
+- [Architecture Overview](../architecture/overview.md) — Understand the five-primitive design

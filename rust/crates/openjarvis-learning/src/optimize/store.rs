@@ -552,7 +552,7 @@ mod tests {
                     low: Some(0.0),
                     high: Some(1.0),
                     description: "temp".into(),
-                    pillar: "intelligence".into(),
+                    primitive: "intelligence".into(),
                 }],
                 fixed: HashMap::new(),
                 constraints: vec![],
@@ -633,16 +633,16 @@ mod tests {
 
         let mut trial = make_trial("t_fb", 0.7);
         trial.structured_feedback = Some(TrialFeedback {
-            summary_text: "The intelligence pillar needs tuning".into(),
+            summary_text: "The intelligence primitive needs tuning".into(),
             failure_patterns: vec!["timeout on long prompts".into()],
-            pillar_ratings: {
+            primitive_ratings: {
                 let mut m = HashMap::new();
                 m.insert("intelligence".into(), "medium".into());
                 m.insert("agent".into(), "high".into());
                 m
             },
             suggested_changes: vec!["lower temperature".into()],
-            target_pillar: "intelligence".into(),
+            target_primitive: "intelligence".into(),
         });
         trial.per_benchmark = vec![BenchmarkScore {
             benchmark: "supergpqa".into(),
@@ -664,7 +664,7 @@ mod tests {
         let lt = &loaded[0];
         assert!(lt.structured_feedback.is_some());
         let fb = lt.structured_feedback.as_ref().unwrap();
-        assert_eq!(fb.target_pillar, "intelligence");
+        assert_eq!(fb.target_primitive, "intelligence");
         assert_eq!(lt.per_benchmark.len(), 1);
         assert_eq!(lt.per_benchmark[0].benchmark, "supergpqa");
     }

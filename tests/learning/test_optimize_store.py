@@ -21,14 +21,14 @@ def _sample_search_space() -> SearchSpace:
                 name="agent.type",
                 dim_type="categorical",
                 values=["simple", "orchestrator"],
-                pillar="agent",
+                primitive="agent",
             ),
             SearchDimension(
                 name="intelligence.temperature",
                 dim_type="continuous",
                 low=0.0,
                 high=1.0,
-                pillar="intelligence",
+                primitive="intelligence",
             ),
         ],
         fixed={"engine": "ollama"},
@@ -407,9 +407,9 @@ class TestNewFieldsPersistence:
         trial.structured_feedback = TrialFeedback(
             summary_text="Good accuracy",
             failure_patterns=["timeout", "parse error"],
-            pillar_ratings={"agent": "high", "intelligence": "medium"},
+            primitive_ratings={"agent": "high", "intelligence": "medium"},
             suggested_changes=["reduce max_turns"],
-            target_pillar="agent",
+            target_primitive="agent",
         )
         store.save_trial(run_id, trial)
 
@@ -419,9 +419,9 @@ class TestNewFieldsPersistence:
         assert fb is not None
         assert fb.summary_text == "Good accuracy"
         assert fb.failure_patterns == ["timeout", "parse error"]
-        assert fb.pillar_ratings == {"agent": "high", "intelligence": "medium"}
+        assert fb.primitive_ratings == {"agent": "high", "intelligence": "medium"}
         assert fb.suggested_changes == ["reduce max_turns"]
-        assert fb.target_pillar == "agent"
+        assert fb.target_primitive == "agent"
         store.close()
 
     def test_pareto_frontier_ids_roundtrip(self, tmp_path) -> None:

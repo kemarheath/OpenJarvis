@@ -51,9 +51,9 @@ pub struct SearchDimension {
     /// Human-readable explanation (shown to the LLM optimizer).
     #[serde(default)]
     pub description: String,
-    /// Which pillar this dimension belongs to: intelligence, engine, agent, tools, learning.
+    /// Which primitive this dimension belongs to: intelligence, engine, agent, tools, learning.
     #[serde(default)]
-    pub pillar: String,
+    pub primitive: String,
 }
 
 /// The full space of configs the optimizer can propose.
@@ -77,24 +77,24 @@ impl SearchSpace {
         lines.push("# Search Space".to_string());
         lines.push(String::new());
 
-        // Group dimensions by pillar
-        let mut by_pillar: HashMap<&str, Vec<&SearchDimension>> = HashMap::new();
+        // Group dimensions by primitive
+        let mut by_primitive: HashMap<&str, Vec<&SearchDimension>> = HashMap::new();
         for dim in &self.dimensions {
-            let key = if dim.pillar.is_empty() {
+            let key = if dim.primitive.is_empty() {
                 "other"
             } else {
-                dim.pillar.as_str()
+                dim.primitive.as_str()
             };
-            by_pillar.entry(key).or_default().push(dim);
+            by_primitive.entry(key).or_default().push(dim);
         }
 
-        let mut pillars: Vec<&&str> = by_pillar.keys().collect();
-        pillars.sort();
+        let mut primitives: Vec<&&str> = by_primitive.keys().collect();
+        primitives.sort();
 
-        for pillar in pillars {
-            // Title-case the pillar name
+        for primitive in primitives {
+            // Title-case the primitive name
             let title = {
-                let mut chars = pillar.chars();
+                let mut chars = primitive.chars();
                 match chars.next() {
                     None => String::new(),
                     Some(c) => {
@@ -105,7 +105,7 @@ impl SearchSpace {
             };
             lines.push(format!("## {title}"));
 
-            for dim in &by_pillar[pillar] {
+            for dim in &by_primitive[primitive] {
                 lines.push(format!("- **{}** ({})", dim.name, dim.dim_type));
                 if !dim.description.is_empty() {
                     lines.push(format!("  Description: {}", dim.description));
@@ -309,11 +309,11 @@ pub struct TrialFeedback {
     #[serde(default)]
     pub failure_patterns: Vec<String>,
     #[serde(default)]
-    pub pillar_ratings: HashMap<String, String>,
+    pub primitive_ratings: HashMap<String, String>,
     #[serde(default)]
     pub suggested_changes: Vec<String>,
     #[serde(default)]
-    pub target_pillar: String,
+    pub target_primitive: String,
 }
 
 /// A single candidate configuration proposed by the optimizer.
@@ -477,7 +477,7 @@ mod tests {
                     low: Some(0.0),
                     high: Some(1.0),
                     description: "Generation temperature".into(),
-                    pillar: "intelligence".into(),
+                    primitive: "intelligence".into(),
                 },
                 SearchDimension {
                     name: "agent.type".into(),
@@ -489,7 +489,7 @@ mod tests {
                     low: None,
                     high: None,
                     description: "Agent architecture".into(),
-                    pillar: "agent".into(),
+                    primitive: "agent".into(),
                 },
             ],
             fixed: {
@@ -622,17 +622,17 @@ mod tests {
         let fb = TrialFeedback {
             summary_text: "Good result".into(),
             failure_patterns: vec!["timeout".into()],
-            pillar_ratings: {
+            primitive_ratings: {
                 let mut m = HashMap::new();
                 m.insert("intelligence".into(), "high".into());
                 m
             },
             suggested_changes: vec!["increase temperature".into()],
-            target_pillar: "intelligence".into(),
+            target_primitive: "intelligence".into(),
         };
         let json = serde_json::to_string(&fb).unwrap();
         let parsed: TrialFeedback = serde_json::from_str(&json).unwrap();
         assert_eq!(parsed.summary_text, "Good result");
-        assert_eq!(parsed.target_pillar, "intelligence");
+        assert_eq!(parsed.target_primitive, "intelligence");
     }
 }

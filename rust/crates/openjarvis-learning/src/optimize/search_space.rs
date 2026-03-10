@@ -66,8 +66,8 @@ pub fn build_search_space(config: &serde_json::Value) -> SearchSpace {
                 .unwrap_or("")
                 .to_string();
 
-            // Infer pillar from the first segment of the dotted name
-            let pillar = if name.contains('.') {
+            // Infer primitive from the first segment of the dotted name
+            let primitive = if name.contains('.') {
                 name.split('.').next().unwrap_or("").to_string()
             } else {
                 String::new()
@@ -105,7 +105,7 @@ pub fn build_search_space(config: &serde_json::Value) -> SearchSpace {
                 low,
                 high,
                 description,
-                pillar,
+                primitive,
             }
         })
         .collect();
@@ -117,11 +117,11 @@ pub fn build_search_space(config: &serde_json::Value) -> SearchSpace {
     }
 }
 
-/// Default search space covering all 5 pillars.
+/// Default search space covering all 5 primitives.
 pub fn default_search_space() -> SearchSpace {
     SearchSpace {
         dimensions: vec![
-            // Intelligence pillar
+            // Intelligence primitive
             SearchDimension {
                 name: "intelligence.model".into(),
                 dim_type: DimensionType::Categorical,
@@ -138,7 +138,7 @@ pub fn default_search_space() -> SearchSpace {
                 low: None,
                 high: None,
                 description: "The LLM model to use for generation".into(),
-                pillar: "intelligence".into(),
+                primitive: "intelligence".into(),
             },
             SearchDimension {
                 name: "intelligence.temperature".into(),
@@ -148,7 +148,7 @@ pub fn default_search_space() -> SearchSpace {
                 high: Some(1.0),
                 description: "Generation temperature (0 = deterministic, 1 = creative)"
                     .into(),
-                pillar: "intelligence".into(),
+                primitive: "intelligence".into(),
             },
             SearchDimension {
                 name: "intelligence.max_tokens".into(),
@@ -157,7 +157,7 @@ pub fn default_search_space() -> SearchSpace {
                 low: Some(256.0),
                 high: Some(8192.0),
                 description: "Maximum tokens to generate per response".into(),
-                pillar: "intelligence".into(),
+                primitive: "intelligence".into(),
             },
             SearchDimension {
                 name: "intelligence.top_p".into(),
@@ -166,7 +166,7 @@ pub fn default_search_space() -> SearchSpace {
                 low: Some(0.0),
                 high: Some(1.0),
                 description: "Nucleus sampling probability threshold".into(),
-                pillar: "intelligence".into(),
+                primitive: "intelligence".into(),
             },
             SearchDimension {
                 name: "intelligence.system_prompt".into(),
@@ -175,9 +175,9 @@ pub fn default_search_space() -> SearchSpace {
                 low: None,
                 high: None,
                 description: "System prompt to guide model behavior".into(),
-                pillar: "intelligence".into(),
+                primitive: "intelligence".into(),
             },
-            // Engine pillar
+            // Engine primitive
             SearchDimension {
                 name: "engine.backend".into(),
                 dim_type: DimensionType::Categorical,
@@ -196,9 +196,9 @@ pub fn default_search_space() -> SearchSpace {
                 low: None,
                 high: None,
                 description: "Inference engine backend".into(),
-                pillar: "engine".into(),
+                primitive: "engine".into(),
             },
-            // Agent pillar
+            // Agent primitive
             SearchDimension {
                 name: "agent.type".into(),
                 dim_type: DimensionType::Categorical,
@@ -211,7 +211,7 @@ pub fn default_search_space() -> SearchSpace {
                 low: None,
                 high: None,
                 description: "Agent architecture to use".into(),
-                pillar: "agent".into(),
+                primitive: "agent".into(),
             },
             SearchDimension {
                 name: "agent.max_turns".into(),
@@ -220,9 +220,9 @@ pub fn default_search_space() -> SearchSpace {
                 low: Some(1.0),
                 high: Some(30.0),
                 description: "Maximum number of agent reasoning turns".into(),
-                pillar: "agent".into(),
+                primitive: "agent".into(),
             },
-            // Tools pillar
+            // Tools primitive
             SearchDimension {
                 name: "tools.tool_set".into(),
                 dim_type: DimensionType::Subset,
@@ -242,9 +242,9 @@ pub fn default_search_space() -> SearchSpace {
                 low: None,
                 high: None,
                 description: "Set of tools available to the agent".into(),
-                pillar: "tools".into(),
+                primitive: "tools".into(),
             },
-            // Learning pillar
+            // Learning primitive
             SearchDimension {
                 name: "learning.routing_policy".into(),
                 dim_type: DimensionType::Categorical,
@@ -257,7 +257,7 @@ pub fn default_search_space() -> SearchSpace {
                 low: None,
                 high: None,
                 description: "Router policy for model/agent selection".into(),
-                pillar: "learning".into(),
+                primitive: "learning".into(),
             },
         ],
         fixed: HashMap::new(),
@@ -282,18 +282,18 @@ mod tests {
         assert_eq!(space.constraints.len(), 3);
         assert!(space.fixed.is_empty());
 
-        // Check pillar groupings
+        // Check primitive groupings
         let intelligence_dims: Vec<_> = space
             .dimensions
             .iter()
-            .filter(|d| d.pillar == "intelligence")
+            .filter(|d| d.primitive == "intelligence")
             .collect();
         assert_eq!(intelligence_dims.len(), 5);
 
         let agent_dims: Vec<_> = space
             .dimensions
             .iter()
-            .filter(|d| d.pillar == "agent")
+            .filter(|d| d.primitive == "agent")
             .collect();
         assert_eq!(agent_dims.len(), 2);
     }
@@ -327,8 +327,8 @@ mod tests {
         assert_eq!(space.dimensions.len(), 2);
         assert_eq!(space.dimensions[0].name, "intelligence.temperature");
         assert_eq!(space.dimensions[0].dim_type, DimensionType::Continuous);
-        assert_eq!(space.dimensions[0].pillar, "intelligence");
-        assert_eq!(space.dimensions[1].pillar, "agent");
+        assert_eq!(space.dimensions[0].primitive, "intelligence");
+        assert_eq!(space.dimensions[1].primitive, "agent");
         assert_eq!(space.fixed.len(), 1);
         assert_eq!(space.constraints.len(), 1);
     }

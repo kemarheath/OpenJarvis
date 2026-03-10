@@ -1,6 +1,6 @@
 # Learning & Traces
 
-The Learning system is a **cross-cutting concern** that connects all four pillars through trace-driven feedback. It determines which model handles each query (router policies), records the full interaction as a trace, analyzes outcomes, and updates policies based on what worked.
+The Learning system is a **cross-cutting concern** that connects all five primitives through trace-driven feedback. It determines which model handles each query (router policies), records the full interaction as a trace, analyzes outcomes, and updates policies based on what worked.
 
 ---
 
@@ -529,14 +529,14 @@ Trace
 ## Optimization Framework
 
 The optimization subsystem (`learning/optimize/`) provides LLM-guided search
-over OpenJarvis's 5-pillar configuration space. It automates finding optimal
+over OpenJarvis's 5-primitive configuration space. It automates finding optimal
 configurations for accuracy, latency, cost, and energy consumption.
 
 ### Components
 
 | Component | Description |
 |-----------|-------------|
-| `SearchSpace` | Defines tunable dimensions across all 5 pillars |
+| `SearchSpace` | Defines tunable dimensions across all 5 primitives |
 | `LLMOptimizer` | Proposes configurations using an LLM backend |
 | `OptimizationEngine` | Orchestrates the propose-evaluate-analyze loop |
 | `OptimizationStore` | SQLite-backed persistence for trials and runs |

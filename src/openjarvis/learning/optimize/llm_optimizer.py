@@ -273,9 +273,9 @@ class LLMOptimizer:
             "Provide your analysis as a JSON object inside a ```json code block with:\n"
             '1. "summary_text": string with detailed analysis\n'
             '2. "failure_patterns": list of identified failure patterns\n'
-            '3. "pillar_ratings": dict mapping pillar names to "high"/"medium"/"low"\n'
+            '3. "primitive_ratings": dict mapping primitive names to "high"/"medium"/"low"\n'
             '4. "suggested_changes": list of specific config changes to try\n'
-            '5. "target_pillar": which pillar to change next '
+            '5. "target_primitive": which primitive to change next '
             "(intelligence/engine/agent/tools/learning)"
         )
         return "\n".join(lines)
@@ -323,13 +323,13 @@ class LLMOptimizer:
                     lines.append(
                         f"Failure patterns: {', '.join(fb.failure_patterns)}"
                     )
-                if fb.pillar_ratings:
+                if fb.primitive_ratings:
                     ratings = ", ".join(
-                        f"{k}={v}" for k, v in sorted(fb.pillar_ratings.items())
+                        f"{k}={v}" for k, v in sorted(fb.primitive_ratings.items())
                     )
-                    lines.append(f"Pillar ratings: {ratings}")
-                if fb.target_pillar:
-                    lines.append(f"Target pillar: {fb.target_pillar}")
+                    lines.append(f"Primitive ratings: {ratings}")
+                if fb.target_primitive:
+                    lines.append(f"Target primitive: {fb.target_primitive}")
             elif result.analysis:
                 lines.append(f"Analysis: {result.analysis}")
             if result.failure_modes:
@@ -402,17 +402,17 @@ class LLMOptimizer:
         self,
         history: List[TrialResult],
         base_config: TrialConfig,
-        target_pillar: str,
+        target_primitive: str,
         frontier_ids: Optional[set] = None,
     ) -> TrialConfig:
-        """Propose a config that only changes one pillar."""
+        """Propose a config that only changes one primitive."""
         if self.optimizer_backend is None:
             raise ValueError(
                 "optimizer_backend is required to propose configurations"
             )
 
         prompt = self._build_targeted_prompt(
-            history, base_config, target_pillar, frontier_ids,
+            history, base_config, target_primitive, frontier_ids,
         )
         response = self.optimizer_backend.generate(
             prompt,
@@ -426,8 +426,8 @@ class LLMOptimizer:
         # Enforce constraint: preserve non-target params from base_config
         merged_params = dict(base_config.params)
         for key, value in proposed.params.items():
-            if key.startswith(target_pillar + ".") or key.startswith(
-                target_pillar.rstrip("s") + "."
+            if key.startswith(target_primitive + ".") or key.startswith(
+                target_primitive.rstrip("s") + "."
             ):
                 merged_params[key] = value
         proposed.params = merged_params
@@ -463,10 +463,10 @@ class LLMOptimizer:
         self,
         history: List[TrialResult],
         base_config: TrialConfig,
-        target_pillar: str,
+        target_primitive: str,
         frontier_ids: Optional[set] = None,
     ) -> str:
-        """Build prompt for pillar-targeted mutation."""
+        """Build prompt for primitive-targeted mutation."""
         lines: List[str] = []
         lines.append(
             "You are optimizing an OpenJarvis AI system configuration."
@@ -479,9 +479,9 @@ class LLMOptimizer:
             lines.append(f"- {key}: {value}")
         lines.append("")
 
-        lines.append(f"## Target Pillar: {target_pillar}")
+        lines.append(f"## Target Primitive: {target_primitive}")
         lines.append(
-            f"ONLY change parameters under the '{target_pillar}' pillar. "
+            f"ONLY change parameters under the '{target_primitive}' primitive. "
             "Keep all other parameters exactly as they are."
         )
         lines.append("")
@@ -494,7 +494,7 @@ class LLMOptimizer:
         lines.append(
             "Return a JSON object inside a ```json code block with:\n"
             '1. "params": dict of config params (only change '
-            f"{target_pillar} params)\n"
+            f"{target_primitive} params)\n"
             '2. "reasoning": string explaining your changes'
         )
         return "\n".join(lines)
@@ -609,9 +609,9 @@ class LLMOptimizer:
                 return TrialFeedback(
                     summary_text=data.get("summary_text", ""),
                     failure_patterns=data.get("failure_patterns", []),
-                    pillar_ratings=data.get("pillar_ratings", {}),
+                    primitive_ratings=data.get("primitive_ratings", {}),
                     suggested_changes=data.get("suggested_changes", []),
-                    target_pillar=data.get("target_pillar", ""),
+                    target_primitive=data.get("target_primitive", ""),
                 )
             except json.JSONDecodeError as exc:
                 logger.debug("Failed to parse LLM optimizer JSON response: %s", exc)

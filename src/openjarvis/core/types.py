@@ -1,4 +1,4 @@
-"""Canonical data types shared across all OpenJarvis pillars."""
+"""Canonical data types shared across all OpenJarvis primitives."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-//! OpenJarvis Recipes — composable TOML configs that wire all five pillars.
+//! OpenJarvis Recipes — composable TOML configs that wire all five primitives.
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

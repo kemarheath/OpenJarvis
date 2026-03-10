@@ -27,7 +27,7 @@ class TestSearchDimension:
             dim_type="categorical",
             values=["simple", "orchestrator", "native_react"],
             description="Agent architecture",
-            pillar="agent",
+            primitive="agent",
         )
         assert dim.name == "agent.type"
         assert dim.dim_type == "categorical"
@@ -37,7 +37,7 @@ class TestSearchDimension:
             "native_react",
         ]
         assert dim.description == "Agent architecture"
-        assert dim.pillar == "agent"
+        assert dim.primitive == "agent"
         assert dim.low is None
         assert dim.high is None
 
@@ -48,7 +48,7 @@ class TestSearchDimension:
             low=0.0,
             high=1.0,
             description="Generation temperature",
-            pillar="intelligence",
+            primitive="intelligence",
         )
         assert dim.dim_type == "continuous"
         assert dim.low == 0.0
@@ -61,7 +61,7 @@ class TestSearchDimension:
             dim_type="integer",
             low=1,
             high=30,
-            pillar="agent",
+            primitive="agent",
         )
         assert dim.dim_type == "integer"
         assert dim.low == 1
@@ -72,7 +72,7 @@ class TestSearchDimension:
             name="tools.tool_set",
             dim_type="subset",
             values=["calculator", "think", "web_search"],
-            pillar="tools",
+            primitive="tools",
         )
         assert dim.dim_type == "subset"
         assert len(dim.values) == 3
@@ -82,7 +82,7 @@ class TestSearchDimension:
             name="intelligence.system_prompt",
             dim_type="text",
             description="System prompt to guide model behavior",
-            pillar="intelligence",
+            primitive="intelligence",
         )
         assert dim.dim_type == "text"
         assert dim.values == []
@@ -95,7 +95,7 @@ class TestSearchDimension:
         assert dim.low is None
         assert dim.high is None
         assert dim.description == ""
-        assert dim.pillar == ""
+        assert dim.primitive == ""
 
     def test_mutable_default_isolation(self) -> None:
         """Ensure mutable defaults are independent."""
@@ -150,7 +150,7 @@ class TestSearchSpace:
                     dim_type="categorical",
                     values=["simple", "orchestrator"],
                     description="Agent kind",
-                    pillar="agent",
+                    primitive="agent",
                 ),
             ],
         )
@@ -171,7 +171,7 @@ class TestSearchSpace:
                     dim_type="continuous",
                     low=0.0,
                     high=1.0,
-                    pillar="intelligence",
+                    primitive="intelligence",
                 ),
             ],
         )
@@ -186,7 +186,7 @@ class TestSearchSpace:
                 SearchDimension(
                     name="intelligence.system_prompt",
                     dim_type="text",
-                    pillar="intelligence",
+                    primitive="intelligence",
                 ),
             ],
         )
@@ -216,28 +216,28 @@ class TestSearchSpace:
         assert "max_turns must be >= 1" in desc
         assert "temperature must be <= 1.0" in desc
 
-    def test_to_prompt_description_groups_by_pillar(self) -> None:
+    def test_to_prompt_description_groups_by_primitive(self) -> None:
         space = SearchSpace(
             dimensions=[
                 SearchDimension(
                     name="a.x",
                     dim_type="categorical",
                     values=["1"],
-                    pillar="agent",
+                    primitive="agent",
                 ),
                 SearchDimension(
                     name="i.y",
                     dim_type="continuous",
                     low=0,
                     high=1,
-                    pillar="intelligence",
+                    primitive="intelligence",
                 ),
                 SearchDimension(
                     name="a.z",
                     dim_type="integer",
                     low=1,
                     high=10,
-                    pillar="agent",
+                    primitive="agent",
                 ),
             ],
         )
@@ -550,23 +550,23 @@ class TestTrialFeedback:
         fb = TrialFeedback(
             summary_text="Trial showed strong accuracy but high latency.",
             failure_patterns=["timeout on long inputs", "hallucination"],
-            pillar_ratings={"intelligence": "good", "agent": "needs work"},
+            primitive_ratings={"intelligence": "good", "agent": "needs work"},
             suggested_changes=["lower temperature", "increase max_turns"],
-            target_pillar="agent",
+            target_primitive="agent",
         )
         assert fb.summary_text == "Trial showed strong accuracy but high latency."
         assert fb.failure_patterns == ["timeout on long inputs", "hallucination"]
-        assert fb.pillar_ratings == {"intelligence": "good", "agent": "needs work"}
+        assert fb.primitive_ratings == {"intelligence": "good", "agent": "needs work"}
         assert fb.suggested_changes == ["lower temperature", "increase max_turns"]
-        assert fb.target_pillar == "agent"
+        assert fb.target_primitive == "agent"
 
     def test_defaults(self) -> None:
         fb = TrialFeedback()
         assert fb.summary_text == ""
         assert fb.failure_patterns == []
-        assert fb.pillar_ratings == {}
+        assert fb.primitive_ratings == {}
         assert fb.suggested_changes == []
-        assert fb.target_pillar == ""
+        assert fb.target_primitive == ""
 
     def test_mutable_isolation(self) -> None:
         """Ensure mutable defaults are independent across instances."""

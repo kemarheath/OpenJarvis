@@ -48,9 +48,9 @@ Hands-on guides that walk through building real applications with OpenJarvis. Ea
 
 ## What You Will Learn
 
-Each tutorial demonstrates a different combination of OpenJarvis pillars working together:
+Each tutorial demonstrates a different combination of OpenJarvis primitives working together:
 
-| Tutorial | Agent | Key Pillars |
+| Tutorial | Agent | Key Primitives |
 |---|---|---|
 | Deep Research | `orchestrator` | Engine, Agents, Tools (web + memory), Recipes |
 | Scheduled Ops | `orchestrator`, `native_react` | Agents, Tools, Scheduler |

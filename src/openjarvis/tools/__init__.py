@@ -1,4 +1,4 @@
-"""Tools pillar — tool system with ABC interface and built-in tools."""
+"""Tools primitive — tool system with ABC interface and built-in tools."""
 
 from __future__ import annotations
 

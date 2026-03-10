@@ -20,7 +20,7 @@ class SearchDimension:
     low: Optional[float] = None  # continuous/integer lower bound
     high: Optional[float] = None  # continuous/integer upper bound
     description: str = ""  # human-readable explanation for the LLM optimizer
-    pillar: str = ""  # intelligence | engine | agent | tools | learning
+    primitive: str = ""  # intelligence | engine | agent | tools | learning
 
 
 @dataclass(slots=True)
@@ -37,14 +37,14 @@ class SearchSpace:
         lines.append("# Search Space")
         lines.append("")
 
-        # Group dimensions by pillar
-        by_pillar: Dict[str, List[SearchDimension]] = {}
+        # Group dimensions by primitive
+        by_primitive: Dict[str, List[SearchDimension]] = {}
         for dim in self.dimensions:
-            key = dim.pillar or "other"
-            by_pillar.setdefault(key, []).append(dim)
+            key = dim.primitive or "other"
+            by_primitive.setdefault(key, []).append(dim)
 
-        for pillar, dims in sorted(by_pillar.items()):
-            lines.append(f"## {pillar.title()}")
+        for primitive, dims in sorted(by_primitive.items()):
+            lines.append(f"## {primitive.title()}")
             for dim in dims:
                 lines.append(f"- **{dim.name}** ({dim.dim_type})")
                 if dim.description:
@@ -138,9 +138,9 @@ class TrialFeedback:
 
     summary_text: str = ""
     failure_patterns: List[str] = field(default_factory=list)
-    pillar_ratings: Dict[str, str] = field(default_factory=dict)
+    primitive_ratings: Dict[str, str] = field(default_factory=dict)
     suggested_changes: List[str] = field(default_factory=list)
-    target_pillar: str = ""
+    target_primitive: str = ""
 
 
 @dataclass(slots=True)

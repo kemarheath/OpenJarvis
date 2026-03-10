@@ -1,4 +1,4 @@
-//! Agents pillar — pluggable agent logic for queries, tool calls, memory.
+//! Agents primitive — pluggable agent logic for queries, tool calls, memory.
 
 pub mod helpers;
 pub mod loop_guard;

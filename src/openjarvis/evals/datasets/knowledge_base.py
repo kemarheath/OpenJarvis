@@ -23,9 +23,9 @@ Provide a concise, accurate answer based solely on the documents above."""
 
 _RECORDS = [
     {
-        "documents": "OpenJarvis Architecture Guide (v2.9):\nOpenJarvis is organized around five composable pillars: Intelligence, Engine, Agents, Tools, and Learning. The Intelligence pillar handles model definition and catalog management via ModelRegistry. The Engine pillar provides inference through backends including Ollama, vLLM, SGLang, llama.cpp, MLX, and LM Studio. All engines implement the InferenceEngine ABC with generate(), stream(), list_models(), and health() methods.",
-        "question": "What are the five pillars of OpenJarvis and what does the Engine pillar provide?",
-        "answer": "The five pillars are Intelligence, Engine, Agents, Tools, and Learning. The Engine pillar provides inference through backends including Ollama, vLLM, SGLang, llama.cpp, MLX, and LM Studio.",
+        "documents": "OpenJarvis Architecture Guide (v2.9):\nOpenJarvis is organized around five composable primitives: Intelligence, Engine, Agents, Tools, and Learning. The Intelligence primitive handles model definition and catalog management via ModelRegistry. The Engine primitive provides inference through backends including Ollama, vLLM, SGLang, llama.cpp, MLX, and LM Studio. All engines implement the InferenceEngine ABC with generate(), stream(), list_models(), and health() methods.",
+        "question": "What are the five primitives of OpenJarvis and what does the Engine primitive provide?",
+        "answer": "The five primitives are Intelligence, Engine, Agents, Tools, and Learning. The Engine primitive provides inference through backends including Ollama, vLLM, SGLang, llama.cpp, MLX, and LM Studio.",
     },
     {
         "documents": "Memory Backend Comparison (Internal Doc):\nSQLite/FTS5 is the default memory backend, providing full-text search with minimal dependencies. FAISS offers dense vector similarity search suitable for semantic retrieval. ColBERTv2 provides late-interaction retrieval with higher accuracy but requires more compute. BM25 is a traditional sparse retrieval method. The Hybrid backend uses Reciprocal Rank Fusion (RRF) to combine results from multiple backends.",
@@ -48,12 +48,12 @@ _RECORDS = [
         "answer": "The available energy monitoring backends are NvidiaEnergyMonitor (hardware counters/polling), AmdEnergyMonitor (amdsmi), AppleEnergyMonitor (zeus-ml), and RaplEnergyMonitor (sysfs). The Apple backend uses the zeus-ml library.",
     },
     {
-        "documents": "Configuration Reference:\nOpenJarvis uses TOML configuration with pillar-aligned sections. The config file is located at ~/.openjarvis/config.toml. Key sections include [engine] with nested per-backend configs (e.g., [engine.ollama], [engine.vllm]), [intelligence] for model defaults, [agent] for agent configuration, [tools.storage] for memory backend settings, [learning] with nested routing/intelligence/agent/metrics sub-policies, and [security] with capabilities and rate limiting.",
+        "documents": "Configuration Reference:\nOpenJarvis uses TOML configuration with primitive-aligned sections. The config file is located at ~/.openjarvis/config.toml. Key sections include [engine] with nested per-backend configs (e.g., [engine.ollama], [engine.vllm]), [intelligence] for model defaults, [agent] for agent configuration, [tools.storage] for memory backend settings, [learning] with nested routing/intelligence/agent/metrics sub-policies, and [security] with capabilities and rate limiting.",
         "question": "Where is the config file located and what format does it use?",
         "answer": "The config file is located at ~/.openjarvis/config.toml and uses TOML format.",
     },
     {
-        "documents": "Learning Subsystem Overview:\nThe Learning pillar supports multiple routing policies. HeuristicRouter uses rule-based routing. SFTRouterPolicy learns query-to-model mapping from traces. GRPORouterPolicy uses softmax sampling with group relative advantage and per-query-class weights. BanditRouterPolicy implements Thompson Sampling and UCB1 with per-arm statistics. SkillDiscovery mines tool subsequences from traces to auto-generate skill manifests.",
+        "documents": "Learning Subsystem Overview:\nThe Learning primitive supports multiple routing policies. HeuristicRouter uses rule-based routing. SFTRouterPolicy learns query-to-model mapping from traces. GRPORouterPolicy uses softmax sampling with group relative advantage and per-query-class weights. BanditRouterPolicy implements Thompson Sampling and UCB1 with per-arm statistics. SkillDiscovery mines tool subsequences from traces to auto-generate skill manifests.",
         "question": "What routing policies are available and what algorithm does BanditRouterPolicy implement?",
         "answer": "Available routing policies are HeuristicRouter, SFTRouterPolicy, GRPORouterPolicy, and BanditRouterPolicy. BanditRouterPolicy implements Thompson Sampling and UCB1 algorithms.",
     },
@@ -118,7 +118,7 @@ _RECORDS = [
         "answer": "The vault uses Fernet encryption and is stored at ~/.openjarvis/vault.enc.",
     },
     {
-        "documents": "Recipe System Documentation:\nRecipes are composable TOML configs that wire all 5 pillars. Each Recipe dataclass provides to_builder_kwargs() for SystemBuilder integration. Three built-in recipes exist: coding_assistant, research_assistant, and general_assistant. Operator recipes include researcher (4h cycle), correspondent (5min interval), and sentinel (2h cycle). Recipes are discovered via discover_recipes() and resolved via resolve_recipe().",
+        "documents": "Recipe System Documentation:\nRecipes are composable TOML configs that wire all 5 primitives. Each Recipe dataclass provides to_builder_kwargs() for SystemBuilder integration. Three built-in recipes exist: coding_assistant, research_assistant, and general_assistant. Operator recipes include researcher (4h cycle), correspondent (5min interval), and sentinel (2h cycle). Recipes are discovered via discover_recipes() and resolved via resolve_recipe().",
         "question": "What built-in recipes exist and what are the operator recipe cycle times?",
         "answer": "Built-in recipes are coding_assistant, research_assistant, and general_assistant. Operator recipe cycle times: researcher (4h), correspondent (5min), sentinel (2h).",
     },

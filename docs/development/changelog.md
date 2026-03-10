@@ -264,7 +264,7 @@ All notable changes to OpenJarvis are documented in this file.
 
 ### Added
 
-- **Intelligence pillar**
+- **Intelligence primitive**
     - `ModelSpec` dataclass with parameter count, context length, quantization,
       VRAM requirements, and supported engines
     - `ModelRegistry` for model metadata storage
@@ -325,6 +325,6 @@ All notable changes to OpenJarvis are documented in this file.
   overlay semantics, hardware auto-detection, `generate_default_toml()` for
   `jarvis init`
 - **Event bus** -- Synchronous pub/sub `EventBus` with `EventType` enum for
-  inter-pillar communication
+  inter-primitive communication
 - **CLI skeleton** -- Click-based `jarvis` command group with `--version`,
   `--help`, and `init` subcommand

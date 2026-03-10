@@ -97,7 +97,7 @@ impl<T: Send + Sync + 'static> TypedRegistry<T> {
 }
 
 // ---------------------------------------------------------------------------
-// Global registry instances — one per pillar
+// Global registry instances — one per primitive
 // ---------------------------------------------------------------------------
 
 use crate::types::ModelSpec;

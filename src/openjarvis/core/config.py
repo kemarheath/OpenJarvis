@@ -497,7 +497,7 @@ class MetricsConfig:
 
 @dataclass
 class LearningConfig:
-    """Learning system settings with per-pillar sub-policies."""
+    """Learning system settings with per-primitive sub-policies."""
 
     enabled: bool = False
     update_interval: int = 100  # traces between automatic policy updates
@@ -617,7 +617,7 @@ class BrowserConfig:
 
 @dataclass(slots=True)
 class ToolsConfig:
-    """Tools pillar settings — wraps storage and MCP configuration."""
+    """Tools primitive settings — wraps storage and MCP configuration."""
 
     storage: StorageConfig = field(default_factory=StorageConfig)
     mcp: MCPConfig = field(default_factory=MCPConfig)

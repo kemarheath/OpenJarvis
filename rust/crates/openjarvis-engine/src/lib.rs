@@ -1,4 +1,4 @@
-//! Inference Engine pillar — LLM runtime management.
+//! Inference Engine primitive — LLM runtime management.
 //!
 //! Provides the `InferenceEngine` trait and concrete backends (Ollama,
 //! cloud providers, OpenAI-compatible servers).

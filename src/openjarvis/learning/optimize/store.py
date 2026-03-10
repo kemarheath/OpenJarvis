@@ -214,9 +214,9 @@ class OptimizationStore:
         fb_json = json.dumps({
             "summary_text": fb.summary_text,
             "failure_patterns": fb.failure_patterns,
-            "pillar_ratings": fb.pillar_ratings,
+            "primitive_ratings": fb.primitive_ratings,
             "suggested_changes": fb.suggested_changes,
-            "target_pillar": fb.target_pillar,
+            "target_primitive": fb.target_primitive,
         }) if fb else "{}"
 
         self._conn.execute(
@@ -295,7 +295,7 @@ class OptimizationStore:
                     "low": d.low,
                     "high": d.high,
                     "description": d.description,
-                    "pillar": d.pillar,
+                    "primitive": d.primitive,
                 }
             )
         return json.dumps(
@@ -322,7 +322,7 @@ class OptimizationStore:
                     low=d.get("low"),
                     high=d.get("high"),
                     description=d.get("description", ""),
-                    pillar=d.get("pillar", ""),
+                    primitive=d.get("primitive", ""),
                 )
             )
         return SearchSpace(
@@ -446,9 +446,9 @@ class OptimizationStore:
                     structured_feedback = TrialFeedback(
                         summary_text=raw_fb.get("summary_text", ""),
                         failure_patterns=raw_fb.get("failure_patterns", []),
-                        pillar_ratings=raw_fb.get("pillar_ratings", {}),
+                        primitive_ratings=raw_fb.get("primitive_ratings", {}),
                         suggested_changes=raw_fb.get("suggested_changes", []),
-                        target_pillar=raw_fb.get("target_pillar", ""),
+                        target_primitive=raw_fb.get("target_primitive", ""),
                     )
             except (json.JSONDecodeError, TypeError) as exc:
                 logger.debug("Failed to parse stored JSON: %s", exc)

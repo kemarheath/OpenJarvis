@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class JarvisSystem:
-    """Fully wired system -- the single source of truth for pillar composition."""
+    """Fully wired system -- the single source of truth for primitive composition."""
 
     config: JarvisConfig
     bus: EventBus
