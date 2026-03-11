@@ -56,3 +56,73 @@ def test_activity_tracking_filters_by_agent_id(tmp_path):
     updated_b = mgr.get_agent(agent_b["id"])
     assert updated_b["last_activity_at"] is None
     mgr.close()
+
+
+def test_reconcile_detects_stalled_agent(tmp_path):
+    """_reconcile() marks agent as stalled when last_activity_at is too old."""
+    mgr = AgentManager(str(tmp_path / "test.db"))
+    bus = EventBus(record_history=True)
+    executor = AgentExecutor(mgr, bus)
+    from openjarvis.agents.scheduler import AgentScheduler
+
+    scheduler = AgentScheduler(mgr, executor, event_bus=bus)
+
+    agent = mgr.create_agent("stall-me", config={
+        "timeout_seconds": 10,
+        "max_stall_retries": 3,
+    })
+    mgr.update_agent(agent["id"], status="running", last_activity_at=time.time() - 30)
+
+    scheduler._reconcile()
+
+    updated = mgr.get_agent(agent["id"])
+    assert updated["stall_retries"] == 1
+
+    stall_events = [
+        e for e in bus.history
+        if e.event_type == EventType.AGENT_STALL_DETECTED
+    ]
+    assert len(stall_events) == 1
+    mgr.close()
+
+
+def test_reconcile_skips_active_agent(tmp_path):
+    """_reconcile() does NOT mark agent as stalled if activity is recent."""
+    mgr = AgentManager(str(tmp_path / "test.db"))
+    bus = EventBus(record_history=True)
+    executor = AgentExecutor(mgr, bus)
+    from openjarvis.agents.scheduler import AgentScheduler
+
+    scheduler = AgentScheduler(mgr, executor, event_bus=bus)
+
+    agent = mgr.create_agent("active", config={"timeout_seconds": 10})
+    mgr.update_agent(agent["id"], status="running", last_activity_at=time.time() - 2)
+
+    scheduler._reconcile()
+
+    updated = mgr.get_agent(agent["id"])
+    assert updated["status"] == "running"
+    mgr.close()
+
+
+def test_reconcile_retries_exhausted_sets_error(tmp_path):
+    """After max_stall_retries, agent goes to error status."""
+    mgr = AgentManager(str(tmp_path / "test.db"))
+    bus = EventBus()
+    executor = AgentExecutor(mgr, bus)
+    from openjarvis.agents.scheduler import AgentScheduler
+
+    scheduler = AgentScheduler(mgr, executor, event_bus=bus)
+
+    agent = mgr.create_agent("exhausted", config={
+        "timeout_seconds": 10,
+        "max_stall_retries": 2,
+    })
+    mgr.update_agent(agent["id"], status="running",
+                     last_activity_at=time.time() - 30, stall_retries=2)
+
+    scheduler._reconcile()
+
+    updated = mgr.get_agent(agent["id"])
+    assert updated["status"] == "error"
+    mgr.close()

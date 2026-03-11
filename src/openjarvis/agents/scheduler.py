@@ -7,6 +7,8 @@ import threading
 import time
 from typing import TYPE_CHECKING, Any
 
+from openjarvis.core.events import EventType
+
 if TYPE_CHECKING:
     from openjarvis.agents.executor import AgentExecutor
     from openjarvis.agents.manager import AgentManager
@@ -48,10 +50,12 @@ class AgentScheduler:
         manager: AgentManager,
         executor: AgentExecutor | Any,
         tick_interval: float = 1.0,
+        event_bus: Any = None,
     ) -> None:
         self._manager = manager
         self._executor = executor
         self._tick_interval = tick_interval
+        self._bus = event_bus
         # agent_id -> {schedule_type, schedule_value, next_fire}
         self._agents: dict[str, dict] = {}
         self._lock = threading.Lock()
@@ -126,9 +130,15 @@ class AgentScheduler:
 
     def _loop(self) -> None:
         """Main scheduler loop."""
+        last_reconcile = 0.0
+        reconcile_interval = 30
         while not self._stop_event.is_set():
             try:
                 self._check_due_agents()
+                now = time.time()
+                if now - last_reconcile >= reconcile_interval:
+                    self._reconcile()
+                    last_reconcile = now
             except Exception:
                 logger.exception("Scheduler tick error")
             self._stop_event.wait(self._tick_interval)
@@ -146,7 +156,9 @@ class AgentScheduler:
 
         for agent_id, info in due:
             agent = self._manager.get_agent(agent_id)
-            if agent is None or agent["status"] in ("paused", "archived", "running"):
+            if agent is None or agent["status"] in (
+                "paused", "archived", "running", "budget_exceeded", "stalled",
+            ):
                 continue
 
             logger.info("Firing tick for agent %s", agent_id)
@@ -167,3 +179,50 @@ class AgentScheduler:
                             now + float(info["schedule_value"])
                         )
                     # Manual: stays at inf
+
+    def _reconcile(self) -> None:
+        """Check running agents for stalls and handle retries."""
+        agents = self._manager.list_agents()
+        now = time.time()
+
+        for agent in agents:
+            if agent["status"] != "running":
+                continue
+
+            config = agent.get("config", {})
+            timeout = config.get("timeout_seconds", 0)
+            if timeout <= 0:
+                continue
+
+            last_activity = agent.get("last_activity_at")
+            if last_activity is None:
+                continue
+
+            if now - last_activity <= timeout:
+                continue
+
+            # Agent is stalled
+            max_retries = config.get("max_stall_retries", 5)
+            current_retries = agent.get("stall_retries", 0)
+
+            if current_retries >= max_retries:
+                self._manager.update_agent(agent["id"], status="error")
+                logger.warning(
+                    "Agent %s stall retries exhausted (%d/%d), setting error",
+                    agent["id"], current_retries, max_retries,
+                )
+            else:
+                self._manager.end_tick(agent["id"])  # Release concurrency guard
+                self._manager.update_agent(
+                    agent["id"], stall_retries=current_retries + 1,
+                )
+                if self._bus:
+                    self._bus.publish(EventType.AGENT_STALL_DETECTED, {
+                        "agent_id": agent["id"],
+                        "last_activity_at": last_activity,
+                        "stall_retries": current_retries + 1,
+                    })
+                logger.warning(
+                    "Agent %s stalled (retry %d/%d)",
+                    agent["id"], current_retries + 1, max_retries,
+                )
