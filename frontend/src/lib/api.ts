@@ -194,10 +194,22 @@ export interface ManagedAgent {
   name: string;
   agent_type: string;
   config: Record<string, unknown>;
-  status: 'idle' | 'running' | 'paused' | 'error' | 'archived';
+  status: 'idle' | 'running' | 'paused' | 'error' | 'archived' | 'needs_attention' | 'budget_exceeded' | 'stalled';
   summary_memory: string;
   created_at: number;
   updated_at: number;
+  // Runtime stats
+  total_runs?: number;
+  total_cost?: number;
+  total_tokens?: number;
+  last_run_at?: number | null;
+  // Schedule
+  schedule_type?: string;
+  schedule_value?: string;
+  // Budget
+  budget?: number;
+  // Learning
+  learning_enabled?: boolean;
 }
 
 export interface AgentTask {
