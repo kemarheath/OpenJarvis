@@ -157,7 +157,26 @@ export async function triggerLearning(apiUrl: string, agentId: string): Promise<
   await fetch(`${apiUrl}/v1/managed-agents/${agentId}/learning/run`, { method: 'POST' });
 }
 
+export interface AgentTraceDetail {
+  id: string;
+  agent: string;
+  outcome: string;
+  duration: number;
+  started_at: number;
+  steps: Array<{
+    step_type: string;
+    input: unknown;
+    output: string;
+    duration: number;
+    metadata: Record<string, unknown>;
+  }>;
+}
+
 export async function fetchAgentTraces(apiUrl: string, agentId: string, limit = 20): Promise<AgentTrace[]> {
   const data = await request<{ traces: AgentTrace[] }>(apiUrl, `/v1/managed-agents/${agentId}/traces?limit=${limit}`);
   return data.traces || [];
+}
+
+export async function fetchAgentTrace(apiUrl: string, agentId: string, traceId: string): Promise<AgentTraceDetail> {
+  return request<AgentTraceDetail>(apiUrl, `/v1/managed-agents/${agentId}/traces/${traceId}`);
 }
