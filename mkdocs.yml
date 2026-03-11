@@ -132,7 +132,6 @@ extra:
 
 nav:
   - Home: index.md
-  - Leaderboard: leaderboard.md
   - Getting Started:
       - Installation: getting-started/installation.md
       - Quick Start: getting-started/quickstart.md
@@ -161,3 +160,4 @@ nav:
       - Deployment: deployment/index.md
       - Roadmap: development/roadmap.md
       - Changelog: development/changelog.md
+  - Leaderboard: leaderboard.md

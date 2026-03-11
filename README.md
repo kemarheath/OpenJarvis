@@ -15,7 +15,7 @@
 
 > **[Documentation](https://open-jarvis.github.io/OpenJarvis/)**
 >
-> **[Project Site](https://www.intelligence-per-watt.ai/)**
+> **[Project Site](https://www.intelligence-per-watt.ai/)** | **[Leaderboard](https://open-jarvis.github.io/OpenJarvis/leaderboard/)**
 
 OpenJarvis is a framework for building AI systems that run *entirely on local hardware*. Rather than treating intelligence as a cloud service, OpenJarvis provides composable abstractions for local model selection, inference, agentic reasoning, tool use, and learning — all aware of the hardware they run on.
 
