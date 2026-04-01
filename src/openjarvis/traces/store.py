@@ -96,6 +96,13 @@ class TraceStore:
         self._conn.execute(_CREATE_STEPS)
         self._conn.execute(_CREATE_FTS)
         self._conn.execute(_FTS_SYNC_INSERT)
+        # Migrate: add messages column if missing (pre-existing databases)
+        try:
+            self._conn.execute(
+                "ALTER TABLE traces ADD COLUMN messages TEXT NOT NULL DEFAULT '[]'"
+            )
+        except sqlite3.OperationalError:
+            pass  # Column already exists
         self._conn.commit()
 
     def save(self, trace: Trace) -> None:
