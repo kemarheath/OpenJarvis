@@ -17,6 +17,7 @@ max_tokens = 4096
 max_workers = 8
 output_dir = "results/neurips-2026/baselines/gpt54/liveresearch/"
 seed = 42
+telemetry = true
 
 [[models]]
 name = "gpt-5.4-2026-03-05"

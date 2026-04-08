@@ -17,6 +17,7 @@ max_tokens = 4096
 max_workers = 8
 output_dir = "results/neurips-2026/baselines/gemini-31-pro/liveresearch/"
 seed = 42
+telemetry = true
 
 [[models]]
 name = "gemini-3.1-pro-preview"

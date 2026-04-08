@@ -18,6 +18,7 @@ engine = "cloud"
 max_workers = 8
 output_dir = "results/neurips-2026/baselines/claude-opus/livecodebench/"
 seed = 42
+telemetry = true
 
 [[models]]
 name = "claude-opus-4-6"
