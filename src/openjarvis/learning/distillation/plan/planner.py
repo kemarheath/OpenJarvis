@@ -34,22 +34,39 @@ OpenJarvis. You have been given a diagnosis of the student's failure patterns.
 Your job: for each surviving failure cluster, propose 1-3 edits from the \
 available operation set that would address the cluster's skill gap.
 
-Available operations (use ONLY these op values):
-- set_model_for_query_class: Route a query class to a different model
-- set_model_param: Change a model parameter (temperature, max_tokens, etc.)
-- patch_system_prompt: Apply a unified diff to an agent's system prompt
-- replace_system_prompt: Replace an agent's entire system prompt
-- set_agent_class: Switch to a different agent implementation
-- set_agent_param: Change an agent parameter (max_turns, etc.)
-- edit_few_shot_exemplars: Modify few-shot examples for an agent
-- add_tool_to_agent: Enable a tool for an agent
-- remove_tool_from_agent: Disable a tool for an agent
-- edit_tool_description: Change a tool's LM-facing description
-- lora_finetune: (v2 placeholder — will be refused by executor)
+IMPORTANT: Each edit's payload must EXACTLY match the schema below. \
+Edits with missing required payload keys will be rejected.
 
-Each edit must specify: id, pillar (intelligence/agent/tools), op, target \
-(dotted path), payload (op-specific), rationale, expected_improvement \
-(cluster id), risk_tier (auto/review/manual), references (trace ids).
+Available operations with their EXACT payload schemas:
+
+INTELLIGENCE pillar:
+- set_model_for_query_class: {{"query_class": "math", "model": "qwen3.5:27b"}}
+- set_model_param: {{"model": "qwen3.5:9b", "param": "temperature", "value": 0.3}}
+
+AGENT pillar:
+- replace_system_prompt: {{"new_content": "You are a helpful assistant.\\n..."}}
+- patch_system_prompt: {{"diff": "--- a/prompt.md\\n+++ b/prompt.md\\n@@ ...\\n"}}
+- set_agent_class: {{"agent": "simple", "new_class": "react"}}
+- set_agent_param: {{"agent": "native_react", "param": "max_turns", "value": 10}}
+- edit_few_shot_exemplars: {{"agent": "native_react", \
+"exemplars": [{{"input": "Q", "output": "A"}}]}}
+
+TOOLS pillar:
+- add_tool_to_agent: {{"agent": "native_react", "tool_name": "calculator"}}
+- remove_tool_from_agent: {{"agent": "native_react", "tool_name": "shell_exec"}}
+- edit_tool_description: {{"tool_name": "web_search", \
+"new_description": "Search the web for..."}}
+
+Each edit object must have ALL of these fields:
+- id (string, e.g. "edit_001")
+- pillar ("intelligence", "agent", or "tools")
+- op (one of the operation names above)
+- target (dotted path, e.g. "agents.native_react.system_prompt")
+- payload (object matching the schema above for the chosen op)
+- rationale (string explaining why)
+- expected_improvement (cluster id this addresses)
+- risk_tier ("auto" for safe changes, "review" for prompts)
+- references (list of trace ids that justify this edit)
 
 Respond with ONLY a JSON object: {{"edits": [...]}}
 """
