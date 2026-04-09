@@ -154,9 +154,11 @@ class LearningPlanner:
         )
 
         # Make the teacher call
+        from openjarvis.core.types import Message, Role
+
         messages = [
-            {"role": "system", "content": _PLANNER_SYSTEM_PROMPT},
-            {"role": "user", "content": user_prompt},
+            Message(role=Role.SYSTEM, content=_PLANNER_SYSTEM_PROMPT),
+            Message(role=Role.USER, content=user_prompt),
         ]
         result = self._engine.generate(
             messages=messages,
