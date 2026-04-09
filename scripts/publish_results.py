@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import sys
 from pathlib import Path
@@ -32,7 +33,7 @@ from typing import Any
 
 # ── Configuration ─────────────────────────────────────────────────────────────
 
-DEFAULT_HF_REPO = "open-jarvis/neurips-2026-evals"   # change to your org/repo
+DEFAULT_HF_REPO = "akenginorhun/neurips-2026-evals"   # change to your org/repo
 
 # Columns to include in the published dataset (order preserved)
 KEEP_COLUMNS = [
@@ -76,6 +77,11 @@ def _clean_row(row: dict[str, Any]) -> dict[str, Any]:
         if isinstance(val, (dict, list)):
             val = json.dumps(val, ensure_ascii=False)
         out[col] = val
+    # Ensure string columns never have None (causes schema mismatch across splits)
+    for col in ("error", "model_answer", "reference", "problem", "scoring_metadata",
+                "record_id", "benchmark", "model", "backend"):
+        if out.get(col) is None:
+            out[col] = ""
     return out
 
 
@@ -89,7 +95,7 @@ def load_jsonl(path: Path) -> list[dict[str, Any]]:
     return rows
 
 
-def publish_file(path: Path, repo_id: str, dry_run: bool = False) -> None:
+def publish_file(path: Path, repo_id: str, token: str | None = None, dry_run: bool = False) -> None:
     rows = load_jsonl(path)
     if not rows:
         print(f"  [skip] {path} — empty file")
@@ -112,22 +118,46 @@ def publish_file(path: Path, repo_id: str, dry_run: bool = False) -> None:
         return
 
     try:
-        from datasets import Dataset
+        from datasets import Dataset, Features, Value
     except ImportError:
         print("  [error] Install datasets:  pip install datasets")
         sys.exit(1)
 
-    ds = Dataset.from_list(cleaned)
+    # Explicit schema so all splits share the same types regardless of null content
+    features = Features({
+        "record_id": Value("string"),
+        "benchmark": Value("string"),
+        "model": Value("string"),
+        "backend": Value("string"),
+        "problem": Value("string"),
+        "reference": Value("string"),
+        "model_answer": Value("string"),
+        "is_correct": Value("bool"),
+        "score": Value("float64"),
+        "latency_seconds": Value("float64"),
+        "prompt_tokens": Value("int64"),
+        "completion_tokens": Value("int64"),
+        "cost_usd": Value("float64"),
+        "throughput_tok_per_sec": Value("float64"),
+        "energy_joules": Value("float64"),
+        "power_watts": Value("float64"),
+        "gpu_utilization_pct": Value("float64"),
+        "estimated_flops": Value("float64"),
+        "scoring_metadata": Value("string"),
+        "error": Value("string"),
+    })
+    ds = Dataset.from_list(cleaned, features=features)
     ds.push_to_hub(
         repo_id,
         config_name=benchmark,
         split=split,
+        token=token,
         commit_message=f"results: {benchmark} / {model} ({len(cleaned)} samples)",
     )
     print(f"  [ok] pushed → {repo_id} / {benchmark} / {split}")
 
 
-def publish_all(baselines_dir: Path, repo_id: str, dry_run: bool = False) -> None:
+def publish_all(baselines_dir: Path, repo_id: str, token: str | None = None, dry_run: bool = False) -> None:
     files = sorted(baselines_dir.rglob("*.jsonl"))
     files = [f for f in files if "traces" not in f.parts]
     if not files:
@@ -136,7 +166,7 @@ def publish_all(baselines_dir: Path, repo_id: str, dry_run: bool = False) -> Non
     print(f"Found {len(files)} result file(s) under {baselines_dir}\n")
     for f in files:
         print(f"Publishing: {f}")
-        publish_file(f, repo_id=repo_id, dry_run=dry_run)
+        publish_file(f, repo_id=repo_id, token=token, dry_run=dry_run)
         print()
 
 
@@ -165,19 +195,26 @@ def main() -> None:
         default=DEFAULT_HF_REPO,
         help=f"HF repo ID to push to (default: {DEFAULT_HF_REPO})",
     )
+    parser.add_argument(
+        "--token",
+        default=None,
+        help="HuggingFace API token (overrides HUGGINGFACE_HUB_TOKEN env var)",
+    )
     args = parser.parse_args()
+
+    token = args.token or os.environ.get("HUGGINGFACE_HUB_TOKEN")
 
     if args.dry_run:
         print("[dry-run mode — nothing will be pushed]\n")
 
     if args.all:
-        publish_all(args.path, repo_id=args.repo, dry_run=args.dry_run)
+        publish_all(args.path, repo_id=args.repo, token=token, dry_run=args.dry_run)
     else:
         if not args.path.is_file():
             print(f"Error: {args.path} is not a file. Use --all for directories.")
             sys.exit(1)
         print(f"Publishing: {args.path}")
-        publish_file(args.path, repo_id=args.repo, dry_run=args.dry_run)
+        publish_file(args.path, repo_id=args.repo, token=token, dry_run=args.dry_run)
 
 
 if __name__ == "__main__":
