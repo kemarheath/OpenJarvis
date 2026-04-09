@@ -13,6 +13,9 @@ See spec §4 for the data model rationale.
 from __future__ import annotations
 
 from enum import Enum
+from typing import Any
+
+from pydantic import BaseModel, Field
 
 # ---------------------------------------------------------------------------
 # Enums
@@ -76,9 +79,9 @@ class TriggerKind(str, Enum):
 class AutonomyMode(str, Enum):
     """How aggressively the orchestrator applies edits without review."""
 
-    AUTO = "auto"  # all tiers auto-apply, ignore review tier
-    TIERED = "tiered"  # default: respect per-edit risk tier
-    MANUAL = "manual"  # everything goes to review queue (dry-run mode)
+    AUTO = "auto"        # all tiers auto-apply, ignore review tier
+    TIERED = "tiered"    # default: respect per-edit risk tier
+    MANUAL = "manual"    # everything goes to review queue (dry-run mode)
 
 
 class SessionStatus(str, Enum):
@@ -100,11 +103,6 @@ class SessionStatus(str, Enum):
 # ---------------------------------------------------------------------------
 # Edit — atomic unit of change
 # ---------------------------------------------------------------------------
-
-
-from typing import Any  # noqa: E402  (kept with model definitions)
-
-from pydantic import BaseModel, Field  # noqa: E402
 
 
 class Edit(BaseModel):
@@ -147,4 +145,48 @@ class Edit(BaseModel):
     references: list[str] = Field(
         default_factory=list,
         description="Trace ids or benchmark task ids that justify this edit.",
+    )
+
+
+# ---------------------------------------------------------------------------
+# FailureCluster — a group of related failures with a shared root cause
+# ---------------------------------------------------------------------------
+
+
+class FailureCluster(BaseModel):
+    """A group of failing traces that share a hypothesised root cause.
+
+    Populated by the teacher in the diagnose phase. The student/teacher rates
+    must come from real ``run_student_on_task`` and ``run_self_on_task`` calls
+    against benchmark tasks (see spec §5.3); clusters where both rates are
+    missing or zero are dropped by the planner.
+
+    See spec §4.2.
+    """
+
+    id: str
+    description: str = Field(..., description="Short human description of the cluster.")
+    sample_trace_ids: list[str] = Field(
+        default_factory=list,
+        description="Trace ids that exemplify this cluster (>= 3 typical).",
+    )
+    student_failure_rate: float = Field(
+        ...,
+        ge=0.0,
+        le=1.0,
+        description="Local student's failure rate on benchmark tasks in this cluster.",
+    )
+    teacher_success_rate: float = Field(
+        ...,
+        ge=0.0,
+        le=1.0,
+        description="Frontier teacher's success rate on the same tasks.",
+    )
+    skill_gap: str = Field(
+        ...,
+        description="Teacher's qualitative analysis of what the student is missing.",
+    )
+    addressed_by_edit_ids: list[str] = Field(
+        default_factory=list,
+        description="Ids of edits in the LearningPlan that target this cluster.",
     )

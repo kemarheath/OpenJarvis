@@ -193,3 +193,78 @@ class TestEdit:
 
         edit = Edit(**kwargs)
         assert edit.references == []
+
+
+# ---------------------------------------------------------------------------
+# FailureCluster
+# ---------------------------------------------------------------------------
+
+
+class TestFailureCluster:
+    """Tests for FailureCluster pydantic model."""
+
+    def _valid_cluster_kwargs(self) -> dict:
+        return {
+            "id": "cluster-001",
+            "description": "Math word problems routed to qwen-3b",
+            "sample_trace_ids": ["trace-001", "trace-002", "trace-003"],
+            "student_failure_rate": 0.85,
+            "teacher_success_rate": 0.95,
+            "skill_gap": (
+                "Student lacks chain-of-thought reasoning on multi-step arithmetic."
+            ),
+            "addressed_by_edit_ids": ["edit-001", "edit-002"],
+        }
+
+    def test_constructs_with_valid_fields(self) -> None:
+        from openjarvis.learning.distillation.models import FailureCluster
+
+        cluster = FailureCluster(**self._valid_cluster_kwargs())
+
+        assert cluster.id == "cluster-001"
+        assert cluster.student_failure_rate == 0.85
+        assert cluster.teacher_success_rate == 0.95
+        assert len(cluster.sample_trace_ids) == 3
+        assert len(cluster.addressed_by_edit_ids) == 2
+
+    def test_round_trip_via_json(self) -> None:
+        from openjarvis.learning.distillation.models import FailureCluster
+
+        cluster = FailureCluster(**self._valid_cluster_kwargs())
+        as_json = cluster.model_dump_json()
+        restored = FailureCluster.model_validate_json(as_json)
+
+        assert restored == cluster
+
+    def test_addressed_by_edit_ids_defaults_empty(self) -> None:
+        from openjarvis.learning.distillation.models import FailureCluster
+
+        kwargs = self._valid_cluster_kwargs()
+        del kwargs["addressed_by_edit_ids"]
+
+        cluster = FailureCluster(**kwargs)
+        assert cluster.addressed_by_edit_ids == []
+
+    def test_failure_rate_must_be_between_zero_and_one(self) -> None:
+        import pytest
+        from pydantic import ValidationError
+
+        from openjarvis.learning.distillation.models import FailureCluster
+
+        kwargs = self._valid_cluster_kwargs()
+        kwargs["student_failure_rate"] = 1.5
+
+        with pytest.raises(ValidationError):
+            FailureCluster(**kwargs)
+
+    def test_success_rate_must_be_between_zero_and_one(self) -> None:
+        import pytest
+        from pydantic import ValidationError
+
+        from openjarvis.learning.distillation.models import FailureCluster
+
+        kwargs = self._valid_cluster_kwargs()
+        kwargs["teacher_success_rate"] = -0.1
+
+        with pytest.raises(ValidationError):
+            FailureCluster(**kwargs)
